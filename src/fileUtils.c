@@ -136,7 +136,7 @@ void simplifyString(char *str, char *buffer)
 }
 size_t listScore(char **list, size_t listSize, char *keyHistory)
 {
-    int bestId = -1;
+    int bestId = 0;
     int bestVal = -1;
     size_t historyLen = strlen(keyHistory);
     for (int i = 0; i < listSize; ++i)

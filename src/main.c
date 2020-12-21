@@ -22,8 +22,8 @@ int main(int argc, char **argv)
         dir[dirLen] = '/';
         dir[dirLen + 1] = '\0';
     }
-    bool displayHidden = true;
-    bool displayFiles = true;
+    bool displayHidden = false;
+    bool displayFiles = false;
     for (int i = 1; i < argc; ++i)
         if (!strcmp(argv[i], "-a") || !strcmp(argv[i], "--all"))
             displayHidden = true;
@@ -72,11 +72,14 @@ options :\n\
     int page;
     int pagesCount;
     char parentBuffer[256];
+    char _history[512];
+    char *letterHistory;
     char *currParent = NULL;
     while (!validate)
     {
         if (fullRefresh)
         {
+            letterHistory = _history;
             fullRefresh = false;
             for (int i = 0; i < filesCount; ++i)
                 free(files[i]);
@@ -155,15 +158,15 @@ options :\n\
         console_buffer += string_write(console_buffer, ":Open");
         console_buffer += string_setCursorPosition(console_buffer, 12, 3 + MAX_LINES_PER_PAGE);
         console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_RED, CONSOLE_FLAG_REVERSE_COLOR);
-        console_buffer += string_write(console_buffer, "Esc");
+        console_buffer += string_write(console_buffer, "^C");
         console_buffer += string_resetFormatting(console_buffer);
         console_buffer += string_write(console_buffer, ":Cancel");
-        console_buffer += string_setCursorPosition(console_buffer, 23, 3 + MAX_LINES_PER_PAGE);
+        console_buffer += string_setCursorPosition(console_buffer, 22, 3 + MAX_LINES_PER_PAGE);
         console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_YELLOW, CONSOLE_FLAG_REVERSE_COLOR);
         console_buffer += string_write(console_buffer, "Backspace");
         console_buffer += string_resetFormatting(console_buffer);
         console_buffer += string_write(console_buffer, ":Refresh");
-        console_buffer += string_setCursorPosition(console_buffer, 41, 3 + MAX_LINES_PER_PAGE);
+        console_buffer += string_setCursorPosition(console_buffer, 40, 3 + MAX_LINES_PER_PAGE);
         console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_BLUE, CONSOLE_FLAG_REVERSE_COLOR);
         console_buffer += string_write(console_buffer, "Tab");
         console_buffer += string_resetFormatting(console_buffer);
@@ -259,6 +262,29 @@ options :\n\
                     currParent = NULL;
                 snprintf(base_buffer, 256, "%s/", folders[selection]);
                 file_combine(dir, base_buffer);
+            }
+            else if (key == 32)
+            {
+                refresh = true;
+                validate = true;
+                FILE *f = fopen("location", "w");
+                fwrite(dir, sizeof(char) * strlen(dir), 1, f);
+                fflush(f);
+                fclose(f);
+            }
+            else if (key == 127)
+            {
+                refresh = true;
+                fullRefresh = true;
+            }
+            else
+            {
+                *letterHistory = key;
+                letterHistory++;
+                *letterHistory = '\0';
+                selection = listScore(folders, foldersCount, _history);
+                if (page != selection / MAX_LINES_PER_PAGE)
+                    refresh = true;
             }
         }
         free(__consoleBuffer);
