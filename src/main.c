@@ -115,6 +115,8 @@ options :\n\
                 }
             }
             closedir(currentDir);
+            file_sort(folders, foldersCount);
+            file_sort(files, filesCount);
             pagesCount = (foldersCount + filesCount) / MAX_LINES_PER_PAGE;
             if ((foldersCount + filesCount) % MAX_LINES_PER_PAGE)
                 pagesCount++;

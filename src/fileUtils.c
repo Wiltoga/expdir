@@ -185,3 +185,23 @@ void file_combine(char *dest, char *src)
         return;
     strcat(dest, src);
 }
+void file_sort(char **list, size_t listSize)
+{
+    bool swapped;
+    int max = listSize - 1;
+    do
+    {
+        swapped = false;
+        for (int i = 0; i < max; ++i)
+        {
+            if (strcmp(list[i], list[i + 1]) > 0)
+            {
+                swapped = true;
+                char *tmp = list[i];
+                list[i] = list[i + 1];
+                list[i + 1] = tmp;
+            }
+        }
+        --max;
+    } while (swapped);
+}
