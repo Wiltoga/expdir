@@ -8,7 +8,7 @@ here is an example of what it looks like :
 
 You can control the cursor using the arrow keys and validate the directory using the space key.
 
-##Installation
+## Installation
 
 To install, clone this repository, then build using the makefile.
 Once this is done, you have to copy the content of [bashrc](bashrc) to your `~/.bashrc` file, at the end. If the makefile does not work, try a `make clean` before. Edit the `dir` variable for the location of the `bin` folder (where is the `expdir` executable). Now, simply restart the terminal. Type `expdir --help` for more info.
