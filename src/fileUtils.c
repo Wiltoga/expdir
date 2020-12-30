@@ -194,7 +194,10 @@ void file_sort(char **list, size_t listSize)
         swapped = false;
         for (int i = 0; i < max; ++i)
         {
-            if (strcmp(list[i], list[i + 1]) > 0)
+            char buffer1[256], buffer2[256];
+            simplifyString(list[i], buffer1);
+            simplifyString(list[i + 1], buffer2);
+            if (strcmp(buffer1, buffer2) > 0)
             {
                 swapped = true;
                 char *tmp = list[i];
