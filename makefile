@@ -3,7 +3,7 @@
 
 CC := gcc
 workspace := 
-FLAGS := -g -Wall
+FLAGS := 
 
 
 
