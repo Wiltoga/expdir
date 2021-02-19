@@ -1,0 +1,9 @@
+Package: expdir
+Version: 1.0
+Section: custom
+Priority: optional
+Architecture: all
+Essential: no
+Installed-Size: 1024
+Maintainer: Wildgoat
+Description: File explorer to move the current working directory

@@ -273,13 +273,14 @@ options :\n\
             }
             else if (key == 32)
             {
+
                 refresh = true;
                 validate = true;
-                FILE *f = fopen("location", "w");
+                FILE *f = fopen("/var/cache/expdir/location", "w");
                 fwrite(dir, sizeof(char) * strlen(dir), 1, f);
                 fflush(f);
                 fclose(f);
-            }
+                        }
             else if (key == 127)
             {
                 refresh = true;
