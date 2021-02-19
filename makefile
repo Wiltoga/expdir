@@ -48,7 +48,11 @@ ifeq ("$(wildcard $(PACKAGE)/usr/local/bin)", "")
 endif
 	cp $(EXPDIR_OUTPUT) $(PACKAGE)/usr/local/bin
 	dpkg-deb -b $(PACKAGE)
-	mv expdir.deb expdir-$(VERSION).deb
+ifeq ("$(wildcard $(workspace)/packages)", "")
+	mkdir $(workspace)/packages
+endif
+	mv expdir.deb $(workspace)/packages/expdir-$(VERSION).deb
+	dpkg-scanpackages $(workspace)/packages | gzip -c9  > $(workspace)/packages/Packages.gz
 
 $(OBJ_SETUP)/main.o : obj $(SRC_SETUP)/main.c
 	$(CC) -o $(OBJ_SETUP)/main.o -c $(SRC_SETUP)/main.c
