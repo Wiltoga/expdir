@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <dirent.h>
+#include <sys/ioctl.h>
 #include "fileUtils.h"
 #include "conManagement/consoleManagement.h"
 #include "conManagement/stringAnsiManagement.h"
@@ -15,7 +16,12 @@ int main(int argc, char **argv)
     char base_buffer[256];
     char __dir__[256];
     char *dir = __dir__;
-    int __max_lines__ = 15;
+    int __max_lines__;
+    {
+        struct winsize w;
+        ioctl(0, TIOCGWINSZ, &w);
+        __max_lines__ = w.ws_row - 3;
+    }
     getcwd(dir, 256);
     {
         size_t dirLen = strlen(dir);
@@ -39,7 +45,7 @@ int main(int argc, char **argv)
 options :\n\
     -a, --all           displays hidden entries\n\
     -f, --files         displays files\n\
-    -c, --count <n>     change the number of lines displayed per page (15 by default)\n\
+    -c, --count <n>     change the number of lines displayed per page (max available by default)\n\
     <path>      start the browser in this directory\n");
             return 0;
         }
@@ -153,22 +159,22 @@ options :\n\
                 console_buffer += string_resetFormatting(console_buffer);
             }
         }
-        console_buffer += string_setCursorPosition(console_buffer, 1, 3 + MAX_LINES_PER_PAGE);
+        console_buffer += string_setCursorPosition(console_buffer, 2, 3 + MAX_LINES_PER_PAGE);
         console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_GREEN, CONSOLE_FLAG_REVERSE_COLOR);
         console_buffer += string_write(console_buffer, "Space");
         console_buffer += string_resetFormatting(console_buffer);
         console_buffer += string_write(console_buffer, ":Open");
-        console_buffer += string_setCursorPosition(console_buffer, 12, 3 + MAX_LINES_PER_PAGE);
+        console_buffer += string_setCursorPosition(console_buffer, 13, 3 + MAX_LINES_PER_PAGE);
         console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_RED, CONSOLE_FLAG_REVERSE_COLOR);
         console_buffer += string_write(console_buffer, "^C");
         console_buffer += string_resetFormatting(console_buffer);
         console_buffer += string_write(console_buffer, ":Cancel");
-        console_buffer += string_setCursorPosition(console_buffer, 22, 3 + MAX_LINES_PER_PAGE);
+        console_buffer += string_setCursorPosition(console_buffer, 23, 3 + MAX_LINES_PER_PAGE);
         console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_YELLOW, CONSOLE_FLAG_REVERSE_COLOR);
         console_buffer += string_write(console_buffer, "Backspace");
         console_buffer += string_resetFormatting(console_buffer);
         console_buffer += string_write(console_buffer, ":Refresh");
-        console_buffer += string_setCursorPosition(console_buffer, 40, 3 + MAX_LINES_PER_PAGE);
+        console_buffer += string_setCursorPosition(console_buffer, 41, 3 + MAX_LINES_PER_PAGE);
         console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_BLUE, CONSOLE_FLAG_REVERSE_COLOR);
         console_buffer += string_write(console_buffer, "Tab");
         console_buffer += string_resetFormatting(console_buffer);
