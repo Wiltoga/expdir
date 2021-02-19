@@ -52,7 +52,8 @@ ifeq ("$(wildcard $(workspace)/packages)", "")
 	mkdir $(workspace)/packages
 endif
 	mv expdir.deb $(workspace)/packages/expdir-$(VERSION).deb
-	dpkg-scanpackages $(workspace)/packages | gzip -c9  > $(workspace)/packages/Packages.gz
+	cd $(workspace)/packages
+	dpkg-scanpackages . | gzip -c9  > ./Packages.gz
 
 $(OBJ_SETUP)/main.o : obj $(SRC_SETUP)/main.c
 	$(CC) -o $(OBJ_SETUP)/main.o -c $(SRC_SETUP)/main.c
