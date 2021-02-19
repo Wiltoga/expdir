@@ -19,6 +19,10 @@ BIN_EXPDIR := $(BIN)
 
 EXPDIR_OUTPUT := $(BIN_EXPDIR)/expdirapp
 
+DEB_DIR := $(workspace)/package
+
+DEB_OUTPUT := $(DEB_DIR)/expdir-$(VERSION).deb
+
 
 all: expdir
 
@@ -49,10 +53,12 @@ endif
 ifeq ("$(wildcard $(PACKAGE)/var/cache/expdir)", "")
 	mkdir -p $(PACKAGE)/var/cache/expdir
 endif
+ifeq ("$(wildcard $(DEB_DIR))", "")
+	mkdir -p $(DEB_DIR)
+endif
 	cp $(EXPDIR_OUTPUT) $(PACKAGE)/usr/local/bin
 	dpkg-deb -b $(PACKAGE)
-	mv expdir.deb expdir-$(VERSION).deb
-	dpkg-scanpackages . | gzip -c9 > Packages.gz
+	mv expdir.deb $(DEB_OUTPUT)
 
 bin:
 ifeq ("$(wildcard $(BIN_EXPDIR))", "")
