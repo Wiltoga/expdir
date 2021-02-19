@@ -353,4 +353,5 @@ MigrationBackup/
 .ionide/
 
 # list of generated packages
-packages/
+*.deb
+Packages.gz

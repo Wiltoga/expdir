@@ -48,30 +48,20 @@ ifeq ("$(wildcard $(PACKAGE)/usr/local/bin)", "")
 endif
 	cp $(EXPDIR_OUTPUT) $(PACKAGE)/usr/local/bin
 	dpkg-deb -b $(PACKAGE)
-ifeq ("$(wildcard $(workspace)/packages)", "")
-	mkdir $(workspace)/packages
-endif
-	mv expdir.deb $(workspace)/packages/expdir-$(VERSION).deb
-	cd $(workspace)/packages
-	dpkg-scanpackages . | gzip -c9  > ./Packages.gz
-
-$(OBJ_SETUP)/main.o : obj $(SRC_SETUP)/main.c
-	$(CC) -o $(OBJ_SETUP)/main.o -c $(SRC_SETUP)/main.c
-
-$(OBJ_SETUP)/bashrc.o : obj $(SRC_SETUP)/bashrc.sh
-	$(OBJCOPY) $(SRC_SETUP)/bashrc.sh $(OBJ_SETUP)/bashrc.o
+	mv expdir.deb expdir-$(VERSION).deb
+	dpkg-scanpackages . | gzip -c9 > Packages.gz
 
 bin:
 ifeq ("$(wildcard $(BIN_EXPDIR))", "")
-	mkdir $(BIN_EXPDIR)
+	mkdir -p $(BIN_EXPDIR)
 endif
 
 obj:
 ifeq ("$(wildcard $(OBJ_EXPDIR))", "")
-	mkdir $(OBJ_EXPDIR)
+	mkdir -p $(OBJ_EXPDIR)
 endif
 ifeq ("$(wildcard $(OBJ_CONSOLE_M))", "")
-	mkdir $(OBJ_CONSOLE_M)
+	mkdir -p $(OBJ_CONSOLE_M)
 endif
 
 clean:
