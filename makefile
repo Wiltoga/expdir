@@ -46,6 +46,9 @@ deb: all
 ifeq ("$(wildcard $(PACKAGE)/usr/local/bin)", "")
 	mkdir -p $(PACKAGE)/usr/local/bin
 endif
+ifeq ("$(wildcard $(PACKAGE)/var/cache/expdir)", "")
+	mkdir -p $(PACKAGE)/var/cache/expdir
+endif
 	cp $(EXPDIR_OUTPUT) $(PACKAGE)/usr/local/bin
 	dpkg-deb -b $(PACKAGE)
 	mv expdir.deb expdir-$(VERSION).deb
