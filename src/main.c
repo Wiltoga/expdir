@@ -280,7 +280,7 @@ options :\n\
                 fwrite(dir, sizeof(char) * strlen(dir), 1, f);
                 fflush(f);
                 fclose(f);
-                        }
+            }
             else if (key == 127)
             {
                 refresh = true;
