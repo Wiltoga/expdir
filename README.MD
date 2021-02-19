@@ -10,5 +10,9 @@ You can control the cursor using the arrow keys and validate the directory using
 
 ## Installation
 
-To install, clone this repository, then build using the makefile.
-Once this is done, you have to copy the content of [bashrc](bashrc) to your `~/.bashrc` file, at the end. If the makefile does not work, try a `make clean` before. Edit the `dir` variable for the location of the `bin` folder (where is the `expdir` executable). Now, simply restart the terminal. Type `expdir --help` for more info.
+Go to the [latest release](https://github.com/WildGoat07/expdir/releases/latest) and follow the steps.
+
+## Build
+
+To build, clone this repository, then build using the makefile.
+You can also generate the .deb using `make deb`. It will be in the ./package folder.
