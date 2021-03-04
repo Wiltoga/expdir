@@ -81,6 +81,7 @@ options :\n\
     char _history[512];
     char *letterHistory;
     char *currParent = NULL;
+    char __consoleBuffer[1024 * 512];
     while (!validate)
     {
         if (fullRefresh)
@@ -130,7 +131,6 @@ options :\n\
                 selection = !strcmp(folders[0], "..") && foldersCount > 1 ? 1 : 0;
         }
         page = selection / MAX_LINES_PER_PAGE;
-        char *__consoleBuffer = malloc(1024 * 512);
         void *console_buffer = __consoleBuffer;
         console_buffer += string_resetFormatting(console_buffer);
         console_buffer += string_clearScreen(console_buffer);
@@ -166,7 +166,7 @@ options :\n\
         console_buffer += string_write(console_buffer, ":Open");
         console_buffer += string_setCursorPosition(console_buffer, 13, 3 + MAX_LINES_PER_PAGE);
         console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_RED, CONSOLE_FLAG_REVERSE_COLOR);
-        console_buffer += string_write(console_buffer, "^C");
+        console_buffer += string_write(console_buffer, "^X");
         console_buffer += string_resetFormatting(console_buffer);
         console_buffer += string_write(console_buffer, ":Cancel");
         console_buffer += string_setCursorPosition(console_buffer, 23, 3 + MAX_LINES_PER_PAGE);
@@ -281,6 +281,12 @@ options :\n\
                 fflush(f);
                 fclose(f);
             }
+            else if (key == 24)
+            {
+
+                refresh = true;
+                validate = true;
+            }
             else if (key == 127)
             {
                 refresh = true;
@@ -296,7 +302,12 @@ options :\n\
                     refresh = true;
             }
         }
-        free(__consoleBuffer);
+    }
+    {
+        void *console_buffer = __consoleBuffer;
+        console_buffer += string_clearScreen(console_buffer);
+        *(char *)console_buffer = '\0';
+        printf("%s", __consoleBuffer);
     }
     return 0;
 }
