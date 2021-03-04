@@ -7,7 +7,7 @@ BIN := $(workspace)/bin
 SRC := $(workspace)/src
 
 PACKAGE := $(workspace)/expdir
-VERSION := 1.0
+VERSION := 1.0.1
 
 SRC_EXPDIR := $(SRC)
 SRC_CONSOLE_M := $(SRC)/conManagement
@@ -47,6 +47,11 @@ $(OBJ_CONSOLE_M)/stringAnsiManagement.o : obj $(SRC_CONSOLE_M)/stringAnsiManagem
 	$(CC) -o $(OBJ_CONSOLE_M)/stringAnsiManagement.o -c $(SRC_CONSOLE_M)/stringAnsiManagement.c
 
 deb: all
+ifeq ("$(wildcard $(PACKAGE)/DEBIAN)", "")
+	mkdir -p $(PACKAGE)/DEBIAN
+endif
+	cp $(workspace)/control $(PACKAGE)/DEBIAN
+	echo "Version: $(VERSION)" >> $(PACKAGE)/DEBIAN/control
 ifeq ("$(wildcard $(PACKAGE)/usr/local/bin)", "")
 	mkdir -p $(PACKAGE)/usr/local/bin
 endif
@@ -77,5 +82,6 @@ clean:
 	rm -rf $(OBJ)
 	rm -rf $(BIN)
 	rm -rf $(PACKAGE)/usr
+	rm -rf $(PACKAGE)/DEBIAN
 
 rebuild: clean obj bin all
