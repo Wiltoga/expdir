@@ -3,6 +3,7 @@
 #include <string.h>
 #include <dirent.h>
 #include <sys/ioctl.h>
+#include <pwd.h>
 #include "fileUtils.h"
 #include "conManagement/consoleManagement.h"
 #include "conManagement/stringAnsiManagement.h"
@@ -24,7 +25,7 @@ int main(int argc, char **argv)
         ioctl(0, TIOCGWINSZ, &w);
         __max_lines__ = w.ws_row - 3;
     }
-    getcwd(dir, 256);
+    strcpy(dir, getenv("PWD"));
     {
         size_t dirLen = strlen(dir);
         dir[dirLen] = '/';
