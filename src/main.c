@@ -11,6 +11,8 @@
 
 typedef struct dirent dirent;
 
+void replaceString(void *dest, char *src, char *pattern, char *override);
+
 int main(int argc, char **argv)
 {
     char base_buffer[256];
@@ -136,7 +138,11 @@ options :\n\
         console_buffer += string_clearScreen(console_buffer);
         console_buffer += string_write(console_buffer, "Current directory : ");
         console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_BLUE);
-        console_buffer += string_write(console_buffer, dir);
+        {
+            char __tmp[256];
+            replaceString(__tmp, dir, getpwuid(getuid())->pw_dir, "~");
+            console_buffer += string_write(console_buffer, __tmp);
+        }
         console_buffer += string_resetFormatting(console_buffer);
         console_buffer += string_setCursorPosition(console_buffer, 1, 2);
         console_buffer += string_formatMode(console_buffer, CONSOLE_FLAG_UNDERLINE);
@@ -310,4 +316,34 @@ options :\n\
         printf("%s", __consoleBuffer);
     }
     return 0;
+}
+
+void replaceString(void *dest, char *src, char *pattern, char *override)
+{
+    int patternSize = strlen(pattern);
+    printf("%d\n", patternSize);
+    while (*src != '\0')
+    {
+        printf("%c\n", *src);
+        bool matchFound = false;
+        int j = 0;
+        while (src[j] == pattern[j])
+        {
+            if (j + 1 == patternSize)
+            {
+                src += j;
+                dest += string_write(dest, override);
+                matchFound = true;
+                break;
+            }
+            ++j;
+        }
+        if (!matchFound)
+        {
+            *(char *)dest = *src;
+            dest += sizeof(char);
+        }
+        ++src;
+    }
+    *(char *)dest = '\0';
 }

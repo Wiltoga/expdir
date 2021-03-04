@@ -11,7 +11,7 @@
  */
 size_t string_formatMode(void *buffer, uint8_t flags);
 /**
- * @brief  Writes the string inside the buffer, without the '\0'
+ * @brief  Writes the string inside the buffer, without the '\\0'
  * @param  buffer buffer to write into 
  * @param  content content of the string to write
  * @return size of the byte written
