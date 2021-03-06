@@ -1,0 +1,16 @@
+# Here put all the aliases for the displayed paths
+# example 1 :
+# %HOME%/foo=bar
+# will show "Current directory : bar/"
+# instead of "Current directory : /home/<user>/foo/"
+#
+# Note that the aliases are applied in the order bellow, so don't put something like :
+# /test = abc
+# /test/foo = bar   <- here "/test" has already been renamed to "abc", you should use ~/foo=bar
+# you can use any environment variable between two "%"
+
+# changes the current folder at the time expdir got opened to '.'
+# %PWD%=.
+
+# changes the home folder to '~'
+%HOME%=~

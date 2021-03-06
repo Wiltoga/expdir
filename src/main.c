@@ -7,15 +7,46 @@
 #include "fileUtils.h"
 #include "conManagement/consoleManagement.h"
 #include "conManagement/stringAnsiManagement.h"
+#include "aliases.h"
 
 #define MAX_LINES_PER_PAGE __max_lines__
 
 typedef struct dirent dirent;
 
-void replaceString(void *dest, char *src, char *pattern, char *override);
+void replaceStartingString(void *dest, char *src, char *pattern, char *override);
 
 int main(int argc, char **argv)
 {
+    char *patterns[64];
+    char *overrides[64];
+    char *paths[2] = {
+        "/etc/expdir/aliases"};
+    {
+        paths[1] = (char *)malloc(256 * sizeof(char));
+        void *ptr = paths[1];
+        ptr += string_write(ptr, getenv("HOME"));
+        ptr += string_write(ptr, "/.config/expdir/aliases");
+        *(char *)ptr = '\0';
+    }
+    int patternCount = parseAliases(paths, 2, patterns, overrides);
+    switch (patternCount)
+    {
+    case -1:
+        printf("ERROR:Missing '=' in the same line in aliases.\n");
+        return -1;
+    case -2:
+        printf("ERROR:Too many '=' in the same line in aliases.\n");
+        return -2;
+    case -3:
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat" //ignores the warning caused by %
+        printf("ERROR:Missing closing '%' in the same line in aliases.\n");
+#pragma GCC diagnostic pop
+        return -3;
+    case -4:
+        printf("ERROR:Unknown environment variable.\n");
+        return -4;
+    }
     char base_buffer[256];
     char __dir__[256];
     char *dir = __dir__;
@@ -46,6 +77,7 @@ int main(int argc, char **argv)
                 "Usage :\n\
     expdir [<options>]\n\
 options :\n\
+    -h, --help          displays this help panel\n\
     -a, --all           displays hidden entries\n\
     -f, --files         displays files\n\
     -c, --count <n>     change the number of lines displayed per page (max available by default)\n\
@@ -140,9 +172,15 @@ options :\n\
         console_buffer += string_write(console_buffer, "Current directory : ");
         console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_BLUE);
         {
-            char __tmp[256];
-            replaceString(__tmp, dir, getpwuid(getuid())->pw_dir, "~");
-            console_buffer += string_write(console_buffer, __tmp);
+            char __tmp1[256];
+            strcpy(__tmp1, dir);
+            char __tmp2[256];
+            for (int i = 0; i < patternCount; ++i)
+            {
+                replaceStartingString(__tmp2, __tmp1, patterns[i], overrides[i]);
+                strcpy(__tmp1, __tmp2);
+            }
+            console_buffer += string_write(console_buffer, __tmp1);
         }
         console_buffer += string_resetFormatting(console_buffer);
         console_buffer += string_setCursorPosition(console_buffer, 1, 2);
@@ -310,6 +348,11 @@ options :\n\
             }
         }
     }
+    for (int i = 0; i < patternCount; ++i)
+    {
+        free(patterns[i]);
+        free(overrides[i]);
+    }
     {
         void *console_buffer = __consoleBuffer;
         console_buffer += string_clearScreen(console_buffer);
@@ -319,32 +362,20 @@ options :\n\
     return 0;
 }
 
-void replaceString(void *dest, char *src, char *pattern, char *override)
+void replaceStartingString(void *dest, char *src, char *pattern, char *override)
 {
     int patternSize = strlen(pattern);
-    printf("%d\n", patternSize);
-    while (*src != '\0')
+    int srcSize = strlen(src);
+    int patternCharMatch = 0;
+    while (patternCharMatch < srcSize && src[patternCharMatch] == pattern[patternCharMatch])
     {
-        printf("%c\n", *src);
-        bool matchFound = false;
-        int j = 0;
-        while (src[j] == pattern[j])
+        if (patternCharMatch + 1 == patternSize)
         {
-            if (j + 1 == patternSize)
-            {
-                src += j;
-                dest += string_write(dest, override);
-                matchFound = true;
-                break;
-            }
-            ++j;
+            src += patternCharMatch + 1;
+            dest += string_write(dest, override);
+            break;
         }
-        if (!matchFound)
-        {
-            *(char *)dest = *src;
-            dest += sizeof(char);
-        }
-        ++src;
+        ++patternCharMatch;
     }
-    *(char *)dest = '\0';
+    strcpy(dest, src);
 }

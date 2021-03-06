@@ -1,5 +1,5 @@
 workspace := .
-FLAGS := -g -Wall
+FLAGS := -Wall
 CC := gcc $(FLAGS)
 
 OBJ := $(workspace)/obj
@@ -7,7 +7,7 @@ BIN := $(workspace)/bin
 SRC := $(workspace)/src
 
 PACKAGE := $(workspace)/expdir
-VERSION := 1.0.2
+VERSION := 1.0.3
 
 SRC_EXPDIR := $(SRC)
 SRC_CONSOLE_M := $(SRC)/conManagement
@@ -26,14 +26,17 @@ DEB_OUTPUT := $(DEB_DIR)/expdir-$(VERSION).deb
 
 all: expdir
 
-expdir: bin $(OBJ_EXPDIR)/main.o $(OBJ_EXPDIR)/fileUtils.o conManagement
-	$(CC) -o $(EXPDIR_OUTPUT) $(OBJ_EXPDIR)/main.o $(OBJ_EXPDIR)/fileUtils.o $(OBJ_CONSOLE_M)/color.o $(OBJ_CONSOLE_M)/consoleManagement.o $(OBJ_CONSOLE_M)/stringAnsiManagement.o
+expdir: bin $(OBJ_EXPDIR)/main.o $(OBJ_EXPDIR)/fileUtils.o $(OBJ_EXPDIR)/aliases.o conManagement
+	$(CC) -o $(EXPDIR_OUTPUT) $(OBJ_EXPDIR)/main.o $(OBJ_EXPDIR)/aliases.o $(OBJ_EXPDIR)/fileUtils.o $(OBJ_CONSOLE_M)/color.o $(OBJ_CONSOLE_M)/consoleManagement.o $(OBJ_CONSOLE_M)/stringAnsiManagement.o
 
 $(OBJ_EXPDIR)/main.o : obj $(SRC_EXPDIR)/main.c
 	$(CC) -o $(OBJ_EXPDIR)/main.o -c $(SRC_EXPDIR)/main.c
 
 $(OBJ_EXPDIR)/fileUtils.o : obj $(SRC_EXPDIR)/fileUtils.c
 	$(CC) -o $(OBJ_EXPDIR)/fileUtils.o -c $(SRC_EXPDIR)/fileUtils.c
+
+$(OBJ_EXPDIR)/aliases.o : obj $(SRC_EXPDIR)/aliases.c
+	$(CC) -o $(OBJ_EXPDIR)/aliases.o -c $(SRC_EXPDIR)/aliases.c
 
 conManagement: $(OBJ_CONSOLE_M)/color.o $(OBJ_CONSOLE_M)/consoleManagement.o $(OBJ_CONSOLE_M)/stringAnsiManagement.o
 
@@ -83,5 +86,3 @@ clean:
 	rm -rf $(BIN)
 	rm -rf $(PACKAGE)/usr
 	rm -rf $(PACKAGE)/DEBIAN
-
-rebuild: clean obj bin all
