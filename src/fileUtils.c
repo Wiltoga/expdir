@@ -200,10 +200,21 @@ void file_sort(char **list, size_t listSize)
         swapped = false;
         for (int i = 0; i < max; ++i)
         {
-            char buffer1[256], buffer2[256];
+            char __buffer1[256], __buffer2[256];
+            char *buffer1 = __buffer1, *buffer2 = __buffer2;
+            if (list[i][0] == '.')
+            {
+                *buffer1 = '.';
+                ++buffer1;
+            }
+            if (list[i + 1][0] == '.')
+            {
+                *buffer2 = '.';
+                ++buffer2;
+            }
             simplifyString(list[i], buffer1);
             simplifyString(list[i + 1], buffer2);
-            if (strcmp(buffer1, buffer2) > 0)
+            if (strcmp(__buffer1, __buffer2) > 0)
             {
                 swapped = true;
                 char *tmp = list[i];
