@@ -17,12 +17,12 @@
 #define LINK_ICON "🔗"
 #define INVALID_ICON "❌"
 
-#define FOLDER_COLOR CONSOLE_COLOR_BRIGHT_YELLOW
-#define FILE_COLOR CONSOLE_COLOR_WHITE
-#define OPERATOR_COLOR CONSOLE_COLOR_CYAN
-#define LINK_COLOR CONSOLE_COLOR_BRIGHT_CYAN
-#define TARGET_COLOR CONSOLE_COLOR_BRIGHT_GREEN
-#define INVALID_COLOR CONSOLE_COLOR_RED
+#define FOLDER_COLOR SYSTEM_COLOR_BRIGHT_YELLOW
+#define FILE_COLOR SYSTEM_COLOR_WHITE
+#define OPERATOR_COLOR SYSTEM_COLOR_CYAN
+#define LINK_COLOR SYSTEM_COLOR_BRIGHT_CYAN
+#define TARGET_COLOR SYSTEM_COLOR_BRIGHT_GREEN
+#define INVALID_COLOR SYSTEM_COLOR_RED
 
 typedef struct dirent dirent;
 
@@ -38,8 +38,8 @@ int main(int argc, char **argv)
     {
         paths[1] = (char *)malloc(256 * sizeof(char));
         void *ptr = paths[1];
-        ptr += string_write(ptr, getenv("HOME"));
-        ptr += string_write(ptr, "/.config/expdir/aliases");
+        ptr += sizeof(char) * sprintf(ptr, "%s", getenv("HOME"));
+        ptr += sizeof(char) * sprintf(ptr, "%s", "/.config/expdir/aliases");
         *(char *)ptr = '\0';
     }
     int patternCount = parseAliases(paths, 2, patterns, overrides);
@@ -205,12 +205,12 @@ options :\n\
         void *console_buffer = __consoleBuffer;
         console_buffer += string_resetFormatting(console_buffer);
         console_buffer += string_clearScreen(console_buffer);
-        console_buffer += string_write(console_buffer, "Current directory : ");
-        console_buffer += string_formatSystemForeground(console_buffer, FOLDER_COLOR);
+        console_buffer += sizeof(char) * sprintf(console_buffer, "Current directory : ");
+        console_buffer += string_formatForeground(console_buffer, FOLDER_COLOR);
         {
             char __tmp[256];
             applyAliases(__tmp, dir, patterns, overrides, patternCount);
-            console_buffer += string_write(console_buffer, __tmp);
+            console_buffer += sizeof(char) * sprintf(console_buffer, "%s", __tmp);
         }
         console_buffer += string_resetFormatting(console_buffer);
         console_buffer += string_setCursorPosition(console_buffer, 1, 2);
@@ -230,65 +230,65 @@ options :\n\
                 file_combine(__fullDir, folders[i]);
                 if (file_isLink(__fullDir))
                 {
-                    console_buffer += string_formatSystemForeground(console_buffer, LINK_COLOR);
+                    console_buffer += string_formatForeground(console_buffer, LINK_COLOR);
                     if (useEmojis)
-                        console_buffer += string_write(console_buffer, !access(__fullDir, R_OK) ? LINK_ICON : INVALID_ICON);
-                    console_buffer += string_write(console_buffer, folders[i]);
-                    console_buffer += string_write(console_buffer, "/");
+                        console_buffer += sizeof(char) * sprintf(console_buffer, !access(__fullDir, R_OK) ? LINK_ICON : INVALID_ICON);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "%s", folders[i]);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
-                    console_buffer += string_formatSystemForeground(console_buffer, OPERATOR_COLOR);
-                    console_buffer += string_write(console_buffer, " -> ");
-                    console_buffer += string_formatSystemForeground(console_buffer, !access(__fullDir, R_OK) ? TARGET_COLOR : INVALID_COLOR);
+                    console_buffer += string_formatForeground(console_buffer, OPERATOR_COLOR);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, " -> ");
+                    console_buffer += string_formatForegroundMode(console_buffer, !access(__fullDir, R_OK) ? TARGET_COLOR : INVALID_COLOR, CONSOLE_FLAG_UNDERLINE);
                     char __tmp1[256];
                     char __tmp2[256];
                     __tmp1[readlink(__fullDir, __tmp1, 256)] = '\0';
                     applyAliases(__tmp2, __tmp1, patterns, overrides, patternCount);
-                    console_buffer += string_write(console_buffer, __tmp2);
-                    console_buffer += string_write(console_buffer, "/");
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "%s", __tmp2);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
                 }
                 else
                 {
-                    console_buffer += string_formatSystemForeground(console_buffer, !access(__fullDir, R_OK) ? FOLDER_COLOR : INVALID_COLOR);
+                    console_buffer += string_formatForeground(console_buffer, !access(__fullDir, R_OK) ? FOLDER_COLOR : INVALID_COLOR);
                     if (useEmojis)
-                        console_buffer += string_write(console_buffer, strcmp(folders[i], "..") ? !access(__fullDir, R_OK) ? FOLDER_ICON : INVALID_ICON : PARENT_ICON);
-                    console_buffer += string_write(console_buffer, folders[i]);
-                    console_buffer += string_write(console_buffer, "/");
+                        console_buffer += sizeof(char) * sprintf(console_buffer, strcmp(folders[i], "..") ? !access(__fullDir, R_OK) ? FOLDER_ICON : INVALID_ICON : PARENT_ICON);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "%s", folders[i]);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
                 }
             }
             else
             {
-                console_buffer += string_formatSystemForeground(console_buffer, FILE_COLOR);
+                console_buffer += string_formatForeground(console_buffer, FILE_COLOR);
                 if (useEmojis)
-                    console_buffer += string_write(console_buffer, FILE_ICON);
-                console_buffer += string_write(console_buffer, files[i - foldersCount]);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, FILE_ICON);
+                console_buffer += sizeof(char) * sprintf(console_buffer, "%s", files[i - foldersCount]);
                 console_buffer += string_resetFormatting(console_buffer);
             }
         }
         console_buffer += string_setCursorPosition(console_buffer, 2, 3 + MAX_LINES_PER_PAGE);
-        console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_GREEN, CONSOLE_FLAG_REVERSE_COLOR);
-        console_buffer += string_write(console_buffer, "Space");
+        console_buffer += string_formatForegroundMode(console_buffer, SYSTEM_COLOR_BRIGHT_GREEN, CONSOLE_FLAG_REVERSE_COLOR);
+        console_buffer += sizeof(char) * sprintf(console_buffer, "Space");
         console_buffer += string_resetFormatting(console_buffer);
-        console_buffer += string_write(console_buffer, ":Open");
+        console_buffer += sizeof(char) * sprintf(console_buffer, ":Open");
         console_buffer += string_setCursorPosition(console_buffer, 13, 3 + MAX_LINES_PER_PAGE);
-        console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_RED, CONSOLE_FLAG_REVERSE_COLOR);
-        console_buffer += string_write(console_buffer, "^X");
+        console_buffer += string_formatForegroundMode(console_buffer, SYSTEM_COLOR_BRIGHT_RED, CONSOLE_FLAG_REVERSE_COLOR);
+        console_buffer += sizeof(char) * sprintf(console_buffer, "^X");
         console_buffer += string_resetFormatting(console_buffer);
-        console_buffer += string_write(console_buffer, ":Cancel");
+        console_buffer += sizeof(char) * sprintf(console_buffer, ":Cancel");
         console_buffer += string_setCursorPosition(console_buffer, 23, 3 + MAX_LINES_PER_PAGE);
-        console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_YELLOW, CONSOLE_FLAG_REVERSE_COLOR);
-        console_buffer += string_write(console_buffer, "Backspace");
+        console_buffer += string_formatForegroundMode(console_buffer, SYSTEM_COLOR_BRIGHT_YELLOW, CONSOLE_FLAG_REVERSE_COLOR);
+        console_buffer += sizeof(char) * sprintf(console_buffer, "Backspace");
         console_buffer += string_resetFormatting(console_buffer);
-        console_buffer += string_write(console_buffer, ":Refresh");
+        console_buffer += sizeof(char) * sprintf(console_buffer, ":Refresh");
         console_buffer += string_setCursorPosition(console_buffer, 41, 3 + MAX_LINES_PER_PAGE);
-        console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_BLUE, CONSOLE_FLAG_REVERSE_COLOR);
-        console_buffer += string_write(console_buffer, "Tab");
+        console_buffer += string_formatForegroundMode(console_buffer, SYSTEM_COLOR_BRIGHT_BLUE, CONSOLE_FLAG_REVERSE_COLOR);
+        console_buffer += sizeof(char) * sprintf(console_buffer, "Tab");
         console_buffer += string_resetFormatting(console_buffer);
-        console_buffer += string_write(console_buffer, ":");
+        console_buffer += sizeof(char) * sprintf(console_buffer, ":");
         if (!strcmp(dir, "/"))
-            console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_RED);
-        console_buffer += string_write(console_buffer, "Parent");
+            console_buffer += string_formatForeground(console_buffer, SYSTEM_COLOR_BRIGHT_RED);
+        console_buffer += sizeof(char) * sprintf(console_buffer, "Parent");
         console_buffer += string_resetFormatting(console_buffer);
         bool refresh = false;
         while (!refresh)
@@ -301,39 +301,39 @@ options :\n\
                 file_combine(__fullDir, folders[selection]);
                 if (file_isLink(__fullDir))
                 {
-                    console_buffer += string_formatSystemForegroundMode(console_buffer, LINK_COLOR, CONSOLE_FLAG_REVERSE_COLOR);
+                    console_buffer += string_formatForegroundMode(console_buffer, LINK_COLOR, CONSOLE_FLAG_REVERSE_COLOR);
                     if (useEmojis)
-                        console_buffer += string_write(console_buffer, !access(__fullDir, R_OK) ? LINK_ICON : INVALID_ICON);
-                    console_buffer += string_write(console_buffer, folders[selection]);
-                    console_buffer += string_write(console_buffer, "/");
+                        console_buffer += sizeof(char) * sprintf(console_buffer, !access(__fullDir, R_OK) ? LINK_ICON : INVALID_ICON);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "%s", folders[selection]);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
-                    console_buffer += string_formatSystemForeground(console_buffer, OPERATOR_COLOR);
-                    console_buffer += string_write(console_buffer, " -> ");
-                    console_buffer += string_formatSystemForeground(console_buffer, !access(__fullDir, R_OK) ? TARGET_COLOR : INVALID_COLOR);
+                    console_buffer += string_formatForeground(console_buffer, OPERATOR_COLOR);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, " -> ");
+                    console_buffer += string_formatForegroundMode(console_buffer, !access(__fullDir, R_OK) ? TARGET_COLOR : INVALID_COLOR, CONSOLE_FLAG_UNDERLINE);
                     char __tmp1[256];
                     char __tmp2[256];
                     __tmp1[readlink(__fullDir, __tmp1, 256)] = '\0';
                     applyAliases(__tmp2, __tmp1, patterns, overrides, patternCount);
-                    console_buffer += string_write(console_buffer, __tmp2);
-                    console_buffer += string_write(console_buffer, "/");
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "%s", __tmp2);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
                 }
                 else
                 {
-                    console_buffer += string_formatSystemForegroundMode(console_buffer, !access(__fullDir, R_OK) ? FOLDER_COLOR : INVALID_COLOR, CONSOLE_FLAG_REVERSE_COLOR);
+                    console_buffer += string_formatForegroundMode(console_buffer, !access(__fullDir, R_OK) ? FOLDER_COLOR : INVALID_COLOR, CONSOLE_FLAG_REVERSE_COLOR);
                     if (useEmojis)
-                        console_buffer += string_write(console_buffer, strcmp(folders[selection], "..") ? !access(__fullDir, R_OK) ? FOLDER_ICON : INVALID_ICON : PARENT_ICON);
-                    console_buffer += string_write(console_buffer, folders[selection]);
-                    console_buffer += string_write(console_buffer, "/");
+                        console_buffer += sizeof(char) * sprintf(console_buffer, strcmp(folders[selection], "..") ? !access(__fullDir, R_OK) ? FOLDER_ICON : INVALID_ICON : PARENT_ICON);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "%s", folders[selection]);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
                 }
             }
             else
             {
-                console_buffer += string_formatSystemForegroundMode(console_buffer, FILE_COLOR, CONSOLE_FLAG_REVERSE_COLOR);
+                console_buffer += string_formatForegroundMode(console_buffer, FILE_COLOR, CONSOLE_FLAG_REVERSE_COLOR);
                 if (useEmojis)
-                    console_buffer += string_write(console_buffer, FILE_ICON);
-                console_buffer += string_write(console_buffer, files[selection - foldersCount]);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, FILE_ICON);
+                console_buffer += sizeof(char) * sprintf(console_buffer, "%s", files[selection - foldersCount]);
                 console_buffer += string_resetFormatting(console_buffer);
             }
             console_buffer += string_setCursorPosition(console_buffer, 1, MAX_LINES_PER_PAGE + 4);
@@ -349,39 +349,39 @@ options :\n\
                 file_combine(__fullDir, folders[selection]);
                 if (file_isLink(__fullDir))
                 {
-                    console_buffer += string_formatSystemForeground(console_buffer, LINK_COLOR);
+                    console_buffer += string_formatForeground(console_buffer, LINK_COLOR);
                     if (useEmojis)
-                        console_buffer += string_write(console_buffer, !access(__fullDir, R_OK) ? LINK_ICON : INVALID_ICON);
-                    console_buffer += string_write(console_buffer, folders[selection]);
-                    console_buffer += string_write(console_buffer, "/");
+                        console_buffer += sizeof(char) * sprintf(console_buffer, !access(__fullDir, R_OK) ? LINK_ICON : INVALID_ICON);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "%s", folders[selection]);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
-                    console_buffer += string_formatSystemForeground(console_buffer, OPERATOR_COLOR);
-                    console_buffer += string_write(console_buffer, " -> ");
-                    console_buffer += string_formatSystemForeground(console_buffer, !access(__fullDir, R_OK) ? TARGET_COLOR : INVALID_COLOR);
+                    console_buffer += string_formatForeground(console_buffer, OPERATOR_COLOR);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, " -> ");
+                    console_buffer += string_formatForegroundMode(console_buffer, !access(__fullDir, R_OK) ? TARGET_COLOR : INVALID_COLOR, CONSOLE_FLAG_UNDERLINE);
                     char __tmp1[256];
                     char __tmp2[256];
                     __tmp1[readlink(__fullDir, __tmp1, 256)] = '\0';
                     applyAliases(__tmp2, __tmp1, patterns, overrides, patternCount);
-                    console_buffer += string_write(console_buffer, __tmp2);
-                    console_buffer += string_write(console_buffer, "/");
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "%s", __tmp2);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
                 }
                 else
                 {
-                    console_buffer += string_formatSystemForeground(console_buffer, !access(__fullDir, R_OK) ? FOLDER_COLOR : INVALID_COLOR);
+                    console_buffer += string_formatForeground(console_buffer, !access(__fullDir, R_OK) ? FOLDER_COLOR : INVALID_COLOR);
                     if (useEmojis)
-                        console_buffer += string_write(console_buffer, strcmp(folders[selection], "..") ? !access(__fullDir, R_OK) ? FOLDER_ICON : INVALID_ICON : PARENT_ICON);
-                    console_buffer += string_write(console_buffer, folders[selection]);
-                    console_buffer += string_write(console_buffer, "/");
+                        console_buffer += sizeof(char) * sprintf(console_buffer, strcmp(folders[selection], "..") ? !access(__fullDir, R_OK) ? FOLDER_ICON : INVALID_ICON : PARENT_ICON);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "%s", folders[selection]);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
                 }
             }
             else
             {
-                console_buffer += string_formatSystemForeground(console_buffer, FILE_COLOR);
+                console_buffer += string_formatForeground(console_buffer, FILE_COLOR);
                 if (useEmojis)
-                    console_buffer += string_write(console_buffer, FILE_ICON);
-                console_buffer += string_write(console_buffer, files[selection - foldersCount]);
+                    console_buffer += sizeof(char) * sprintf(console_buffer, FILE_ICON);
+                console_buffer += sizeof(char) * sprintf(console_buffer, "%s", files[selection - foldersCount]);
                 console_buffer += string_resetFormatting(console_buffer);
             }
             console_buffer += string_setCursorPosition(console_buffer, 1, MAX_LINES_PER_PAGE + 4);
@@ -518,7 +518,7 @@ void replaceStartingString(void *dest, char *src, char *pattern, char *override)
         if (patternCharMatch + 1 == patternSize)
         {
             src += patternCharMatch + 1;
-            dest += string_write(dest, override);
+            dest += sizeof(char) * sprintf(dest, "%s", override);
             break;
         }
         ++patternCharMatch;

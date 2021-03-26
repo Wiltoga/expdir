@@ -62,7 +62,7 @@ void *mode(void *buffer, uint8_t flags)
     }
     return buffer;
 }
-void *sysColor(void *buffer, uint8_t c)
+void *sysColor(void *buffer, color_t c)
 {
     char b[5];
     snprintf(b, 5 * sizeof(char), "%d", c);
@@ -70,22 +70,22 @@ void *sysColor(void *buffer, uint8_t c)
     memcpy(buffer, b, len * sizeof(char));
     return buffer + sizeof(char) * len;
 }
-void *rgbForeground(void *buffer, color c)
+void *rgbForeground(void *buffer, color_t c)
 {
     memcpy(buffer, "38;2;", sizeof(char) * 5);
     buffer += sizeof(char) * 5;
     char b[15];
-    snprintf(b, 15 * sizeof(char), "%d;%d;%d", c.r, c.g, c.b);
+    snprintf(b, 15 * sizeof(char), "%d;%d;%d", color_getRed(c), color_getGreen(c), color_getBlue(c));
     size_t len = strlen(b);
     memcpy(buffer, b, len * sizeof(char));
     return buffer + sizeof(char) * len;
 }
-void *rgbBackground(void *buffer, color c)
+void *rgbBackground(void *buffer, color_t c)
 {
     memcpy(buffer, "48;2;", sizeof(char) * 5);
     buffer += sizeof(char) * 5;
     char b[15];
-    snprintf(b, 15 * sizeof(char), "%d;%d;%d", c.r, c.g, c.b);
+    snprintf(b, 15 * sizeof(char), "%d;%d;%d", color_getRed(c), color_getGreen(c), color_getBlue(c));
     size_t len = strlen(b);
     memcpy(buffer, b, len * sizeof(char));
     return buffer + sizeof(char) * len;
@@ -100,137 +100,90 @@ size_t string_formatMode(void *buffer, uint8_t flags)
     return (size_t)buffer - init;
 }
 
-size_t string_write(void *buffer, char *content)
-{
-    size_t len = strlen(content);
-    memcpy(buffer, content, len * sizeof(char));
-    return len * sizeof(char);
-}
-
-size_t string_formatRGBBackground(void *buffer, color background)
+size_t string_formatBackground(void *buffer, color_t background)
 {
     size_t init = (size_t)buffer;
     buffer = begin(buffer);
-    buffer = rgbBackground(buffer, background);
+    if (isColorCustom(background))
+        buffer = rgbBackground(buffer, background);
+    else
+        buffer = sysColor(buffer, background + 10);
     buffer = end(buffer);
     return (size_t)buffer - init;
 }
 
-size_t string_formatRGBBackgroundMode(void *buffer, color background, uint8_t flags)
+size_t string_formatBackgroundMode(void *buffer, color_t background, uint8_t flags)
 {
     size_t init = (size_t)buffer;
     buffer = begin(buffer);
     buffer = mode(buffer, flags);
     *(char *)buffer = ';';
-    buffer = rgbBackground(buffer + sizeof(char), background);
+    if (isColorCustom(background))
+        buffer = rgbBackground(buffer + sizeof(char), background);
+    else
+        buffer = sysColor(buffer + sizeof(char), background + 10);
     buffer = end(buffer);
     return (size_t)buffer - init;
 }
 
-size_t string_formatSystemBackground(void *buffer, int background)
+size_t string_formatForeground(void *buffer, color_t foreground)
 {
     size_t init = (size_t)buffer;
     buffer = begin(buffer);
-    buffer = sysColor(buffer, background + 10);
+    if (isColorCustom(foreground))
+        buffer = rgbForeground(buffer, foreground);
+    else
+        buffer = sysColor(buffer, foreground);
     buffer = end(buffer);
     return (size_t)buffer - init;
 }
 
-size_t string_formatSystemBackgroundMode(void *buffer, int background, uint8_t flags)
-{
-    size_t init = (size_t)buffer;
-    buffer = begin(buffer);
-    buffer = mode(buffer, flags);
-    *(char *)buffer = ';';
-    buffer = sysColor(buffer + sizeof(char), background + 10);
-    buffer = end(buffer);
-    return (size_t)buffer - init;
-}
-
-size_t string_formatRGBForeground(void *buffer, color foreground)
-{
-    size_t init = (size_t)buffer;
-    buffer = begin(buffer);
-    buffer = rgbForeground(buffer, foreground);
-    buffer = end(buffer);
-    return (size_t)buffer - init;
-}
-
-size_t string_formatRGBForegroundMode(void *buffer, color foreground, uint8_t flags)
+size_t string_formatForegroundMode(void *buffer, color_t foreground, uint8_t flags)
 {
     size_t init = (size_t)buffer;
     buffer = begin(buffer);
     buffer = mode(buffer, flags);
     *(char *)buffer = ';';
-    buffer = rgbForeground(buffer + sizeof(char), foreground);
+    if (isColorCustom(foreground))
+        buffer = rgbForeground(buffer + sizeof(char), foreground);
+    else
+        buffer = sysColor(buffer + sizeof(char), foreground);
     buffer = end(buffer);
     return (size_t)buffer - init;
 }
 
-size_t string_formatSystemForeground(void *buffer, int foreground)
+size_t string_formatColor(void *buffer, color_t foreground, color_t background)
 {
     size_t init = (size_t)buffer;
     buffer = begin(buffer);
-    buffer = sysColor(buffer, foreground);
-    buffer = end(buffer);
-    return (size_t)buffer - init;
-}
-
-size_t string_formatSystemForegroundMode(void *buffer, int foreground, uint8_t flags)
-{
-    size_t init = (size_t)buffer;
-    buffer = begin(buffer);
-    buffer = mode(buffer, flags);
+    if (isColorCustom(foreground))
+        buffer = rgbForeground(buffer, foreground);
+    else
+        buffer = sysColor(buffer, foreground);
     *(char *)buffer = ';';
-    buffer = sysColor(buffer + sizeof(char), foreground);
+    if (isColorCustom(background))
+        buffer = rgbForeground(buffer + sizeof(char), background);
+    else
+        buffer = sysColor(buffer + sizeof(char), background + 10);
     buffer = end(buffer);
     return (size_t)buffer - init;
 }
 
-size_t string_formatRGBColor(void *buffer, color foreground, color background)
-{
-    size_t init = (size_t)buffer;
-    buffer = begin(buffer);
-    buffer = rgbForeground(buffer, foreground);
-    *(char *)buffer = ';';
-    buffer = rgbForeground(buffer + sizeof(char), background);
-    buffer = end(buffer);
-    return (size_t)buffer - init;
-}
-
-size_t string_formatRGBColorMode(void *buffer, color foreground, color background, uint8_t flags)
+size_t string_formatColorMode(void *buffer, color_t foreground, color_t background, uint8_t flags)
 {
     size_t init = (size_t)buffer;
     buffer = begin(buffer);
     buffer = mode(buffer, flags);
     *(char *)buffer = ';';
-    buffer = rgbForeground(buffer, foreground);
+    if (isColorCustom(foreground))
+        buffer = rgbForeground(buffer, foreground);
+    else
+        buffer = sysColor(buffer, foreground);
     *(char *)buffer = ';';
-    buffer = rgbForeground(buffer + sizeof(char), background);
-    buffer = end(buffer);
-    return (size_t)buffer - init;
-}
-
-size_t string_formatSystemColor(void *buffer, int foreground, int background)
-{
-    size_t init = (size_t)buffer;
-    buffer = begin(buffer);
-    buffer = sysColor(buffer, foreground);
-    *(char *)buffer = ';';
-    buffer = sysColor(buffer + sizeof(char), background + 10);
-    buffer = end(buffer);
-    return (size_t)buffer - init;
-}
-
-size_t string_formatSystemColorMode(void *buffer, int foreground, int background, uint8_t flags)
-{
-    size_t init = (size_t)buffer;
-    buffer = begin(buffer);
-    buffer = mode(buffer, flags);
-    *(char *)buffer = ';';
-    buffer = sysColor(buffer, foreground);
-    *(char *)buffer = ';';
-    buffer = sysColor(buffer + sizeof(char), background + 10);
+    if (isColorCustom(background))
+        buffer = rgbForeground(buffer + sizeof(char), background);
+    else
+        buffer = sysColor(buffer + sizeof(char), background + 10);
     buffer = end(buffer);
     return (size_t)buffer - init;
 }

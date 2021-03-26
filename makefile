@@ -27,7 +27,7 @@ DEB_OUTPUT := $(DEB_DIR)/expdir-$(VERSION).deb
 all: expdir
 
 expdir: bin $(OBJ_EXPDIR)/main.o $(OBJ_EXPDIR)/fileUtils.o $(OBJ_EXPDIR)/aliases.o conManagement
-	$(CC) -o $(EXPDIR_OUTPUT) $(OBJ_EXPDIR)/main.o $(OBJ_EXPDIR)/aliases.o $(OBJ_EXPDIR)/fileUtils.o $(OBJ_CONSOLE_M)/color.o $(OBJ_CONSOLE_M)/consoleManagement.o $(OBJ_CONSOLE_M)/stringAnsiManagement.o
+	$(CC) -o $(EXPDIR_OUTPUT) $(OBJ_EXPDIR)/main.o $(OBJ_EXPDIR)/aliases.o $(OBJ_EXPDIR)/fileUtils.o $(OBJ_CONSOLE_M)/color.o $(OBJ_CONSOLE_M)/consoleManagement.o $(OBJ_CONSOLE_M)/stringAnsiManagement.o $(OBJ_CONSOLE_M)/stringTable.o
 
 $(OBJ_EXPDIR)/main.o : obj $(SRC_EXPDIR)/main.c
 	$(CC) -o $(OBJ_EXPDIR)/main.o -c $(SRC_EXPDIR)/main.c
@@ -38,7 +38,7 @@ $(OBJ_EXPDIR)/fileUtils.o : obj $(SRC_EXPDIR)/fileUtils.c
 $(OBJ_EXPDIR)/aliases.o : obj $(SRC_EXPDIR)/aliases.c
 	$(CC) -o $(OBJ_EXPDIR)/aliases.o -c $(SRC_EXPDIR)/aliases.c
 
-conManagement: $(OBJ_CONSOLE_M)/color.o $(OBJ_CONSOLE_M)/consoleManagement.o $(OBJ_CONSOLE_M)/stringAnsiManagement.o
+conManagement: $(OBJ_CONSOLE_M)/color.o $(OBJ_CONSOLE_M)/consoleManagement.o $(OBJ_CONSOLE_M)/stringAnsiManagement.o $(OBJ_CONSOLE_M)/stringTable.o
 
 $(OBJ_CONSOLE_M)/color.o : obj $(SRC_CONSOLE_M)/color.c
 	$(CC) -o $(OBJ_CONSOLE_M)/color.o -c $(SRC_CONSOLE_M)/color.c
@@ -48,6 +48,9 @@ $(OBJ_CONSOLE_M)/consoleManagement.o : obj $(SRC_CONSOLE_M)/consoleManagement.c
 
 $(OBJ_CONSOLE_M)/stringAnsiManagement.o : obj $(SRC_CONSOLE_M)/stringAnsiManagement.c
 	$(CC) -o $(OBJ_CONSOLE_M)/stringAnsiManagement.o -c $(SRC_CONSOLE_M)/stringAnsiManagement.c
+
+$(OBJ_CONSOLE_M)/stringTable.o : obj $(SRC_CONSOLE_M)/stringTable.c
+	$(CC) -o $(OBJ_CONSOLE_M)/stringTable.o -c $(SRC_CONSOLE_M)/stringTable.c
 
 deb: all
 ifeq ("$(wildcard $(PACKAGE)/DEBIAN)", "")

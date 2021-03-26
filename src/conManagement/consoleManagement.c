@@ -51,6 +51,7 @@ char getche(void)
 {
     return getch_(1);
 }
+
 void console_formatMode(char *content, uint8_t flags, ...)
 {
     va_list args;
@@ -94,134 +95,28 @@ void console_formatMode(char *content, uint8_t flags, ...)
     printf("\x1b[0m");
     va_end(args);
 }
-void console_formatRGBBackground(char *content, color background, ...)
+void console_formatBackground(char *content, color_t background, ...)
 {
     va_list args;
     va_start(args, background);
-    printf("\x1b[48;2;%d;%d;%dm", background.r, background.g, background.b);
+    if (isColorCustom(background))
+        printf("\x1b[48;2;%d;%d;%dm", color_getRed(background), color_getGreen(background), color_getBlue(background));
+    else
+        printf("\x1b[%dm", background + 10);
     vprintf(content, args);
     printf("\x1b[0m");
     va_end(args);
 }
-void console_formatRGBBackgroundMode(char *content, color background, uint8_t flags, ...)
+void console_formatBackgroundMode(char *content, color_t background, uint8_t flags, ...)
 {
     va_list args;
     va_start(args, flags);
     char str[50];
-    snprintf(str, 50, "48;2;%d;%d;%d", background.r, background.g, background.b);
-    if (flags & CONSOLE_FLAG_BOLD)
-        strcat(str, ";1");
-    if (flags & CONSOLE_FLAG_UNDERLINE)
-        strcat(str, ";4");
-    if (flags & CONSOLE_FLAG_BLINK)
-        strcat(str, ";5");
-    if (flags & CONSOLE_FLAG_REVERSE_COLOR)
-        strcat(str, ";7");
-    printf("\x1b[%sm", str);
-    vprintf(content, args);
-    printf("\x1b[0m");
-    va_end(args);
-}
-void console_formatSystemBackground(char *content, int background, ...)
-{
-    va_list args;
-    va_start(args, background);
-    printf("\x1b[%dm", background + 10);
-    vprintf(content, args);
-    printf("\x1b[0m");
-    va_end(args);
-}
-void console_formatSystemBackgroundMode(char *content, int background, uint8_t flags, ...)
-{
-    va_list args;
-    va_start(args, flags);
-    char str[50];
-    snprintf(str, 50, "%d", background + 10);
-    if (flags & CONSOLE_FLAG_BOLD)
-        strcat(str, ";1");
-    if (flags & CONSOLE_FLAG_UNDERLINE)
-        strcat(str, ";4");
-    if (flags & CONSOLE_FLAG_BLINK)
-        strcat(str, ";5");
-    if (flags & CONSOLE_FLAG_REVERSE_COLOR)
-        strcat(str, ";7");
-    printf("\x1b[%sm", str);
-    vprintf(content, args);
-    printf("\x1b[0m");
-    va_end(args);
-}
-void console_formatRGBForeground(char *content, color foreground, ...)
-{
-    va_list args;
-    va_start(args, foreground);
-    printf("\x1b[38;2;%d;%d;%dm", foreground.r, foreground.g, foreground.b);
-    vprintf(content, args);
-    printf("\x1b[0m");
-    va_end(args);
-}
-void console_formatRGBForegroundMode(char *content, color foreground, uint8_t flags, ...)
-{
-    va_list args;
-    va_start(args, flags);
-    char str[50];
-    snprintf(str, 50, "38;2;%d;%d;%d", foreground.r, foreground.g, foreground.b);
-    if (flags & CONSOLE_FLAG_BOLD)
-        strcat(str, ";1");
-    if (flags & CONSOLE_FLAG_UNDERLINE)
-        strcat(str, ";4");
-    if (flags & CONSOLE_FLAG_BLINK)
-        strcat(str, ";5");
-    if (flags & CONSOLE_FLAG_REVERSE_COLOR)
-        strcat(str, ";7");
-    printf("\x1b[%sm", str);
-    vprintf(content, args);
-    printf("\x1b[0m");
-    va_end(args);
-}
-void console_formatSystemForeground(char *content, int foreground, ...)
-{
-    va_list args;
-    va_start(args, foreground);
-    printf("\x1b[%dm", foreground);
-    vprintf(content, args);
-    printf("\x1b[0m");
-    va_end(args);
-}
-void console_formatSystemForegroundMode(char *content, int foreground, uint8_t flags, ...)
-{
-    va_list args;
-    va_start(args, flags);
-    char str[50];
-    snprintf(str, 50, "%d", foreground);
-    if (flags & CONSOLE_FLAG_BOLD)
-        strcat(str, ";1");
-    if (flags & CONSOLE_FLAG_UNDERLINE)
-        strcat(str, ";4");
-    if (flags & CONSOLE_FLAG_BLINK)
-        strcat(str, ";5");
-    if (flags & CONSOLE_FLAG_REVERSE_COLOR)
-        strcat(str, ";7");
-    printf("\x1b[%sm", str);
-    vprintf(content, args);
-    printf("\x1b[0m");
-    va_end(args);
-}
+    if (isColorCustom(background))
+        snprintf(str, 50, "48;2;%d;%d;%d", color_getRed(background), color_getGreen(background), color_getBlue(background));
+    else
+        snprintf(str, 50, "%d", background + 10);
 
-void console_formatRGBColor(char *content, color foreground, color background, ...)
-{
-    va_list args;
-    va_start(args, background);
-    printf("\x1b[38;2;%d;%d;%d;48;2;%d;%d;%dm", foreground.r, foreground.g, foreground.b, background.r, background.g, background.b);
-    vprintf(content, args);
-    printf("\x1b[0m");
-    va_end(args);
-}
-void console_formatRGBColorMode(char *content, color foreground, color background, uint8_t flags, ...)
-{
-    va_list args;
-    va_start(args, flags);
-    char str[50];
-    snprintf(str, 50, "38;2;%d;%d;%d;48;2;%d;%d;%d", foreground.r, foreground.g, foreground.b, background.r, background.g, background.b);
     if (flags & CONSOLE_FLAG_BOLD)
         strcat(str, ";1");
     if (flags & CONSOLE_FLAG_UNDERLINE)
@@ -235,21 +130,69 @@ void console_formatRGBColorMode(char *content, color foreground, color backgroun
     printf("\x1b[0m");
     va_end(args);
 }
-void console_formatSystemColor(char *content, int foreground, int background, ...)
+void console_formatForeground(char *content, color_t foreground, ...)
 {
     va_list args;
-    va_start(args, background);
-    printf("\x1b[%d;%dm", foreground, background + 10);
+    va_start(args, foreground);
+    if (isColorCustom(foreground))
+        printf("\x1b[38;2;%d;%d;%dm", color_getRed(foreground), color_getGreen(foreground), color_getBlue(foreground));
+    else
+        printf("\x1b[%dm", foreground);
     vprintf(content, args);
     printf("\x1b[0m");
     va_end(args);
 }
-void console_formatSystemColorMode(char *content, int foreground, int background, uint8_t flags, ...)
+void console_formatForegroundMode(char *content, color_t foreground, uint8_t flags, ...)
 {
     va_list args;
     va_start(args, flags);
     char str[50];
-    snprintf(str, 50, "%d;%d", foreground, background + 10);
+    if (isColorCustom(foreground))
+        snprintf(str, 50, "38;2;%d;%d;%d", color_getRed(foreground), color_getGreen(foreground), color_getBlue(foreground));
+    else
+        snprintf(str, 50, "%d", foreground);
+    if (flags & CONSOLE_FLAG_BOLD)
+        strcat(str, ";1");
+    if (flags & CONSOLE_FLAG_UNDERLINE)
+        strcat(str, ";4");
+    if (flags & CONSOLE_FLAG_BLINK)
+        strcat(str, ";5");
+    if (flags & CONSOLE_FLAG_REVERSE_COLOR)
+        strcat(str, ";7");
+    printf("\x1b[%sm", str);
+    vprintf(content, args);
+    printf("\x1b[0m");
+    va_end(args);
+}
+void console_formatColor(char *content, color_t foreground, color_t background, ...)
+{
+    va_list args;
+    va_start(args, background);
+    if (isColorCustom(foreground))
+        printf("\x1b[38;2;%d;%d;%d", color_getRed(foreground), color_getGreen(foreground), color_getBlue(foreground));
+    else
+        printf("\x1b[%d", foreground);
+    if (isColorCustom(background))
+        printf(";48;2;%d;%d;%dm", color_getRed(background), color_getGreen(background), color_getBlue(background));
+    else
+        printf(";%dm", background + 10);
+    vprintf(content, args);
+    printf("\x1b[0m");
+    va_end(args);
+}
+void console_formatColorMode(char *content, color_t foreground, color_t background, uint8_t flags, ...)
+{
+    va_list args;
+    va_start(args, flags);
+    char str[50];
+    if (isColorCustom(foreground))
+        snprintf(str, 50, "38;2;%d;%d;%d", color_getRed(foreground), color_getGreen(foreground), color_getBlue(foreground));
+    else
+        snprintf(str, 50, "%d", foreground);
+    if (isColorCustom(background))
+        snprintf(str, 50, ";48;2;%d;%d;%d", color_getRed(background), color_getGreen(background), color_getBlue(background));
+    else
+        snprintf(str, 50, ";%d", background + 10);
     if (flags & CONSOLE_FLAG_BOLD)
         strcat(str, ";1");
     if (flags & CONSOLE_FLAG_UNDERLINE)
