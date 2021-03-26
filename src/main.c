@@ -187,7 +187,9 @@ options :\n\
         console_buffer += string_formatMode(console_buffer, CONSOLE_FLAG_UNDERLINE);
         console_buffer += snprintf(console_buffer, 200, "Page %d/%d            ", page + 1, pagesCount);
         console_buffer += string_resetFormatting(console_buffer);
-        int displayedCount = (page + 1 == pagesCount) ? (foldersCount + filesCount) % MAX_LINES_PER_PAGE : MAX_LINES_PER_PAGE;
+        int displayedCount = (page + 1 == pagesCount) ? (foldersCount + filesCount) : MAX_LINES_PER_PAGE;
+        if (displayedCount > MAX_LINES_PER_PAGE)
+            displayedCount %= MAX_LINES_PER_PAGE;
         for (int i = page * MAX_LINES_PER_PAGE; i < page * MAX_LINES_PER_PAGE + displayedCount; ++i)
         {
             console_buffer += string_setCursorPosition(console_buffer, 1, 3 + i - page * MAX_LINES_PER_PAGE);

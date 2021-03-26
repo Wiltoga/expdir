@@ -7,7 +7,7 @@ BIN := $(workspace)/bin
 SRC := $(workspace)/src
 
 PACKAGE := $(workspace)/expdir
-VERSION := 1.0.4
+VERSION := 1.0.5
 
 SRC_EXPDIR := $(SRC)
 SRC_CONSOLE_M := $(SRC)/conManagement
