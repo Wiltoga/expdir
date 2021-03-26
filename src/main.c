@@ -67,11 +67,6 @@ int main(int argc, char **argv)
     char *__dir__ = (char *)malloc(256 * sizeof(char));
     char *dir = __dir__;
     int __max_lines__;
-    {
-        struct winsize w;
-        ioctl(0, TIOCGWINSZ, &w);
-        __max_lines__ = w.ws_row - 3;
-    }
     strcpy(dir, getenv("PWD"));
     {
         size_t dirLen = strlen(dir);
@@ -192,12 +187,17 @@ options :\n\
             closedir(currentDir);
             file_sort(folders, foldersCount);
             file_sort(files, filesCount);
-            pagesCount = (foldersCount + filesCount) / MAX_LINES_PER_PAGE;
-            if ((foldersCount + filesCount) % MAX_LINES_PER_PAGE)
-                pagesCount++;
-            if (selection == -1)
-                selection = !strcmp(folders[0], "..") && foldersCount > 1 ? 1 : 0;
         }
+        {
+            struct winsize w;
+            ioctl(0, TIOCGWINSZ, &w);
+            __max_lines__ = w.ws_row - 3;
+        }
+        pagesCount = (foldersCount + filesCount) / MAX_LINES_PER_PAGE;
+        if ((foldersCount + filesCount) % MAX_LINES_PER_PAGE)
+            pagesCount++;
+        if (selection == -1)
+            selection = !strcmp(folders[0], "..") && foldersCount > 1 ? 1 : 0;
         page = selection / MAX_LINES_PER_PAGE;
         void *console_buffer = __consoleBuffer;
         console_buffer += string_resetFormatting(console_buffer);
