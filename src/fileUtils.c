@@ -42,7 +42,7 @@ bool file_isDir(char *path)
 {
     struct stat path_stat;
     stat(path, &path_stat);
-    return !S_ISREG(path_stat.st_mode);
+    return S_ISDIR(path_stat.st_mode);
 }
 bool file_isLink(char *path)
 {
