@@ -14,10 +14,12 @@
 #define FOLDER_ICON "📁"
 #define FILE_ICON "📄"
 #define PARENT_ICON "↩️"
+#define LINK_ICON "🔗"
+#define INVALID_ICON "❌"
 
 #define FOLDER_COLOR CONSOLE_COLOR_BRIGHT_YELLOW
 #define FILE_COLOR CONSOLE_COLOR_WHITE
-#define OPERATOR_COLOR CONSOLE_COLOR_BRIGHT_MAGENTA
+#define OPERATOR_COLOR CONSOLE_COLOR_CYAN
 #define LINK_COLOR CONSOLE_COLOR_BRIGHT_CYAN
 #define TARGET_COLOR CONSOLE_COLOR_BRIGHT_GREEN
 #define INVALID_COLOR CONSOLE_COLOR_RED
@@ -239,7 +241,7 @@ options :\n\
                 {
                     console_buffer += string_formatSystemForeground(console_buffer, LINK_COLOR);
                     if (useEmojis)
-                        console_buffer += string_write(console_buffer, FOLDER_ICON);
+                        console_buffer += string_write(console_buffer, !access(__fullDir, R_OK) ? LINK_ICON : INVALID_ICON);
                     console_buffer += string_write(console_buffer, folders[i]);
                     console_buffer += string_write(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
@@ -258,7 +260,7 @@ options :\n\
                 {
                     console_buffer += string_formatSystemForeground(console_buffer, !access(__fullDir, R_OK) ? FOLDER_COLOR : INVALID_COLOR);
                     if (useEmojis)
-                        console_buffer += string_write(console_buffer, strcmp(folders[i], "..") ? FOLDER_ICON : PARENT_ICON);
+                        console_buffer += string_write(console_buffer, strcmp(folders[i], "..") ? !access(__fullDir, R_OK) ? FOLDER_ICON : INVALID_ICON : PARENT_ICON);
                     console_buffer += string_write(console_buffer, folders[i]);
                     console_buffer += string_write(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
@@ -310,7 +312,7 @@ options :\n\
                 {
                     console_buffer += string_formatSystemForegroundMode(console_buffer, LINK_COLOR, CONSOLE_FLAG_REVERSE_COLOR);
                     if (useEmojis)
-                        console_buffer += string_write(console_buffer, FOLDER_ICON);
+                        console_buffer += string_write(console_buffer, !access(__fullDir, R_OK) ? LINK_ICON : INVALID_ICON);
                     console_buffer += string_write(console_buffer, folders[selection]);
                     console_buffer += string_write(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
@@ -329,7 +331,7 @@ options :\n\
                 {
                     console_buffer += string_formatSystemForegroundMode(console_buffer, !access(__fullDir, R_OK) ? FOLDER_COLOR : INVALID_COLOR, CONSOLE_FLAG_REVERSE_COLOR);
                     if (useEmojis)
-                        console_buffer += string_write(console_buffer, strcmp(folders[selection], "..") ? FOLDER_ICON : PARENT_ICON);
+                        console_buffer += string_write(console_buffer, strcmp(folders[selection], "..") ? !access(__fullDir, R_OK) ? FOLDER_ICON : INVALID_ICON : PARENT_ICON);
                     console_buffer += string_write(console_buffer, folders[selection]);
                     console_buffer += string_write(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
@@ -358,7 +360,7 @@ options :\n\
                 {
                     console_buffer += string_formatSystemForeground(console_buffer, LINK_COLOR);
                     if (useEmojis)
-                        console_buffer += string_write(console_buffer, FOLDER_ICON);
+                        console_buffer += string_write(console_buffer, !access(__fullDir, R_OK) ? LINK_ICON : INVALID_ICON);
                     console_buffer += string_write(console_buffer, folders[selection]);
                     console_buffer += string_write(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
@@ -377,7 +379,7 @@ options :\n\
                 {
                     console_buffer += string_formatSystemForeground(console_buffer, !access(__fullDir, R_OK) ? FOLDER_COLOR : INVALID_COLOR);
                     if (useEmojis)
-                        console_buffer += string_write(console_buffer, strcmp(folders[selection], "..") ? FOLDER_ICON : PARENT_ICON);
+                        console_buffer += string_write(console_buffer, strcmp(folders[selection], "..") ? !access(__fullDir, R_OK) ? FOLDER_ICON : INVALID_ICON : PARENT_ICON);
                     console_buffer += string_write(console_buffer, folders[selection]);
                     console_buffer += string_write(console_buffer, "/");
                     console_buffer += string_resetFormatting(console_buffer);
