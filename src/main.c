@@ -11,6 +11,10 @@
 
 #define MAX_LINES_PER_PAGE __max_lines__
 
+#define FOLDER_ICON "📁"
+#define FILE_ICON "📄"
+#define PARENT_ICON "↩️"
+
 typedef struct dirent dirent;
 
 void replaceStartingString(void *dest, char *src, char *pattern, char *override);
@@ -196,6 +200,7 @@ options :\n\
                 if (file_isLink(__fullDir))
                 {
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_CYAN);
+                    console_buffer += string_write(console_buffer, FOLDER_ICON);
                     console_buffer += string_write(console_buffer, folders[i]);
                     console_buffer += string_resetFormatting(console_buffer);
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_YELLOW);
@@ -211,6 +216,7 @@ options :\n\
                 else
                 {
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_WHITE);
+                    console_buffer += string_write(console_buffer, strcmp(folders[i], "..") ? FOLDER_ICON : PARENT_ICON);
                     console_buffer += string_write(console_buffer, folders[i]);
                     console_buffer += string_resetFormatting(console_buffer);
                 }
@@ -218,6 +224,7 @@ options :\n\
             else
             {
                 console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_YELLOW);
+                console_buffer += string_write(console_buffer, FILE_ICON);
                 console_buffer += string_write(console_buffer, files[i - foldersCount]);
                 console_buffer += string_resetFormatting(console_buffer);
             }
@@ -258,6 +265,7 @@ options :\n\
                 if (file_isLink(__fullDir))
                 {
                     console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_CYAN, CONSOLE_FLAG_REVERSE_COLOR);
+                    console_buffer += string_write(console_buffer, FOLDER_ICON);
                     console_buffer += string_write(console_buffer, folders[selection]);
                     console_buffer += string_resetFormatting(console_buffer);
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_YELLOW);
@@ -273,6 +281,7 @@ options :\n\
                 else
                 {
                     console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_WHITE, CONSOLE_FLAG_REVERSE_COLOR);
+                    console_buffer += string_write(console_buffer, strcmp(folders[selection], "..") ? FOLDER_ICON : PARENT_ICON);
                     console_buffer += string_write(console_buffer, folders[selection]);
                     console_buffer += string_resetFormatting(console_buffer);
                 }
@@ -280,6 +289,7 @@ options :\n\
             else
             {
                 console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_YELLOW, CONSOLE_FLAG_REVERSE_COLOR);
+                console_buffer += string_write(console_buffer, FILE_ICON);
                 console_buffer += string_write(console_buffer, files[selection - foldersCount]);
                 console_buffer += string_resetFormatting(console_buffer);
             }
@@ -297,6 +307,7 @@ options :\n\
                 if (file_isLink(__fullDir))
                 {
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_CYAN);
+                    console_buffer += string_write(console_buffer, FOLDER_ICON);
                     console_buffer += string_write(console_buffer, folders[selection]);
                     console_buffer += string_resetFormatting(console_buffer);
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_YELLOW);
@@ -312,6 +323,7 @@ options :\n\
                 else
                 {
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_WHITE);
+                    console_buffer += string_write(console_buffer, strcmp(folders[selection], "..") ? FOLDER_ICON : PARENT_ICON);
                     console_buffer += string_write(console_buffer, folders[selection]);
                     console_buffer += string_resetFormatting(console_buffer);
                 }
@@ -319,6 +331,7 @@ options :\n\
             else
             {
                 console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_YELLOW);
+                console_buffer += string_write(console_buffer, FILE_ICON);
                 console_buffer += string_write(console_buffer, files[selection - foldersCount]);
                 console_buffer += string_resetFormatting(console_buffer);
             }
