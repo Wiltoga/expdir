@@ -47,8 +47,8 @@ int main(int argc, char **argv)
         printf("ERROR:Unknown environment variable.\n");
         return -4;
     }
-    char base_buffer[256];
-    char __dir__[256];
+    char *base_buffer = (char *)malloc(256 * sizeof(char));
+    char *__dir__ = (char *)malloc(256 * sizeof(char));
     char *dir = __dir__;
     int __max_lines__;
     {
@@ -103,20 +103,20 @@ options :\n\
     chdir(base_buffer);
     bool fullRefresh = true;
     bool validate = false;
-    char *folders[1024];
+    char **folders = (char **)malloc(1024 * sizeof(char));
     folders[0] = NULL;
     size_t foldersCount = 0;
-    char *files[1024];
+    char **files = (char **)malloc(1024 * sizeof(char));
     files[0] = NULL;
     size_t filesCount = 0;
     int selection;
     int page;
     int pagesCount;
-    char parentBuffer[256];
-    char _history[512];
+    char *parentBuffer = (char *)malloc(256 * sizeof(char));
+    char *_history = (char *)malloc(512 * sizeof(char));
     char *letterHistory;
     char *currParent = NULL;
-    char __consoleBuffer[1024 * 512];
+    char *__consoleBuffer = (char *)malloc(1024 * 1024 * 2 * sizeof(char));
     while (!validate)
     {
         if (fullRefresh)
@@ -164,6 +164,9 @@ options :\n\
                 pagesCount++;
             if (selection == -1)
                 selection = !strcmp(folders[0], "..") && foldersCount > 1 ? 1 : 0;
+            for (int i = 0; i < foldersCount; ++i)
+                printf("%s\n", folders[i]);
+            getch();
         }
         page = selection / MAX_LINES_PER_PAGE;
         void *console_buffer = __consoleBuffer;
@@ -359,6 +362,11 @@ options :\n\
         *(char *)console_buffer = '\0';
         printf("%s", __consoleBuffer);
     }
+    free(__consoleBuffer);
+    free(folders);
+    free(files);
+    free(parentBuffer);
+    free(_history);
     return 0;
 }
 
