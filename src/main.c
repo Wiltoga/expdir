@@ -82,7 +82,6 @@ int main(int argc, char **argv)
     bool displayFiles = false;
     bool useEmojis = false;
     bool showHelp = false;
-    bool extendedDisplay = true;
     for (int i = 1; i < argc; ++i)
     {
         if (argv[i][0] == '-' && argv[i][1] != '-')
