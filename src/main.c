@@ -148,10 +148,8 @@ options :\n\
     int selection;
     int page;
     int pagesCount;
-    char *parentBuffer = (char *)malloc(256 * sizeof(char));
     char *_history = (char *)malloc(512 * sizeof(char));
     char *letterHistory;
-    char *currParent = NULL;
     char *__consoleBuffer = (char *)malloc(1024 * 1024 * 2 * sizeof(char));
     while (!validate)
     {
@@ -178,9 +176,6 @@ options :\n\
                 file_combine(base_buffer, entry->d_name);
                 if ((displayHidden || !file_hidden(base_buffer)) && file_isDir(base_buffer))
                 {
-                    if (currParent != NULL)
-                        if (!strcmp(currParent, entry->d_name))
-                            selection = foldersCount;
                     folders[foldersCount] = (char *)malloc(sizeof(char) * (strlen(entry->d_name) + 1));
                     strcpy(folders[foldersCount], entry->d_name);
                     ++foldersCount;
@@ -435,11 +430,7 @@ options :\n\
                     {
                         strcpy(base_buffer, dir);
                         base_buffer[strlen(base_buffer) - 1] = '\0';
-                        file_filename(base_buffer, parentBuffer);
-                        currParent = parentBuffer;
                     }
-                    else
-                        currParent = NULL;
                     snprintf(base_buffer, 256, "%s/", folders[selection]);
                     file_combine(dir, base_buffer);
                 }
@@ -490,7 +481,6 @@ options :\n\
     free(__consoleBuffer);
     free(folders);
     free(files);
-    free(parentBuffer);
     free(_history);
     return 0;
 }
