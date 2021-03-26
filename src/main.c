@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     case -3:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat" //ignores the warning caused by %
-        printf("ERROR:Missing closing '%' in the same line in aliases.\n");
+        printf("ERROR:Missing closing '\%' in the same line in aliases.\n");
 #pragma GCC diagnostic pop
         return -3;
     case -4:
