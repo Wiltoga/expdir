@@ -69,6 +69,7 @@ int main(int argc, char **argv)
     }
     bool displayHidden = false;
     bool displayFiles = false;
+    bool useEmojis = false;
     for (int i = 1; i < argc; ++i)
         if (!strcmp(argv[i], "-a") || !strcmp(argv[i], "--all"))
             displayHidden = true;
@@ -76,6 +77,8 @@ int main(int argc, char **argv)
             displayFiles = true;
         else if (!strcmp(argv[i], "-c") || !strcmp(argv[i], "--count"))
             __max_lines__ = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "-e") || !strcmp(argv[i], "--emojis"))
+            useEmojis = true;
         else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help"))
         {
             printf(
@@ -85,6 +88,7 @@ options :\n\
     -h, --help          displays this help panel\n\
     -a, --all           displays hidden entries\n\
     -f, --files         displays files\n\
+    -e, --emojis        displays emojis icons\n\
     -c, --count <n>     change the number of lines displayed per page (max available by default)\n\
     <path>      start the browser in this directory\n");
             return 0;
@@ -200,7 +204,8 @@ options :\n\
                 if (file_isLink(__fullDir))
                 {
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_CYAN);
-                    console_buffer += string_write(console_buffer, FOLDER_ICON);
+                    if (useEmojis)
+                        console_buffer += string_write(console_buffer, FOLDER_ICON);
                     console_buffer += string_write(console_buffer, folders[i]);
                     console_buffer += string_resetFormatting(console_buffer);
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_YELLOW);
@@ -216,7 +221,8 @@ options :\n\
                 else
                 {
                     console_buffer += string_formatSystemForeground(console_buffer, !access(__fullDir, R_OK) ? CONSOLE_COLOR_WHITE : CONSOLE_COLOR_RED);
-                    console_buffer += string_write(console_buffer, strcmp(folders[i], "..") ? FOLDER_ICON : PARENT_ICON);
+                    if (useEmojis)
+                        console_buffer += string_write(console_buffer, strcmp(folders[i], "..") ? FOLDER_ICON : PARENT_ICON);
                     console_buffer += string_write(console_buffer, folders[i]);
                     console_buffer += string_resetFormatting(console_buffer);
                 }
@@ -224,7 +230,8 @@ options :\n\
             else
             {
                 console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_YELLOW);
-                console_buffer += string_write(console_buffer, FILE_ICON);
+                if (useEmojis)
+                    console_buffer += string_write(console_buffer, FILE_ICON);
                 console_buffer += string_write(console_buffer, files[i - foldersCount]);
                 console_buffer += string_resetFormatting(console_buffer);
             }
@@ -265,7 +272,8 @@ options :\n\
                 if (file_isLink(__fullDir))
                 {
                     console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_CYAN, CONSOLE_FLAG_REVERSE_COLOR);
-                    console_buffer += string_write(console_buffer, FOLDER_ICON);
+                    if (useEmojis)
+                        console_buffer += string_write(console_buffer, FOLDER_ICON);
                     console_buffer += string_write(console_buffer, folders[selection]);
                     console_buffer += string_resetFormatting(console_buffer);
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_YELLOW);
@@ -281,7 +289,8 @@ options :\n\
                 else
                 {
                     console_buffer += string_formatSystemForegroundMode(console_buffer, !access(__fullDir, R_OK) ? CONSOLE_COLOR_WHITE : CONSOLE_COLOR_RED, CONSOLE_FLAG_REVERSE_COLOR);
-                    console_buffer += string_write(console_buffer, strcmp(folders[selection], "..") ? FOLDER_ICON : PARENT_ICON);
+                    if (useEmojis)
+                        console_buffer += string_write(console_buffer, strcmp(folders[selection], "..") ? FOLDER_ICON : PARENT_ICON);
                     console_buffer += string_write(console_buffer, folders[selection]);
                     console_buffer += string_resetFormatting(console_buffer);
                 }
@@ -289,7 +298,8 @@ options :\n\
             else
             {
                 console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_YELLOW, CONSOLE_FLAG_REVERSE_COLOR);
-                console_buffer += string_write(console_buffer, FILE_ICON);
+                if (useEmojis)
+                    console_buffer += string_write(console_buffer, FILE_ICON);
                 console_buffer += string_write(console_buffer, files[selection - foldersCount]);
                 console_buffer += string_resetFormatting(console_buffer);
             }
@@ -307,7 +317,8 @@ options :\n\
                 if (file_isLink(__fullDir))
                 {
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_CYAN);
-                    console_buffer += string_write(console_buffer, FOLDER_ICON);
+                    if (useEmojis)
+                        console_buffer += string_write(console_buffer, FOLDER_ICON);
                     console_buffer += string_write(console_buffer, folders[selection]);
                     console_buffer += string_resetFormatting(console_buffer);
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_YELLOW);
@@ -323,7 +334,8 @@ options :\n\
                 else
                 {
                     console_buffer += string_formatSystemForeground(console_buffer, !access(__fullDir, R_OK) ? CONSOLE_COLOR_WHITE : CONSOLE_COLOR_RED);
-                    console_buffer += string_write(console_buffer, strcmp(folders[selection], "..") ? FOLDER_ICON : PARENT_ICON);
+                    if (useEmojis)
+                        console_buffer += string_write(console_buffer, strcmp(folders[selection], "..") ? FOLDER_ICON : PARENT_ICON);
                     console_buffer += string_write(console_buffer, folders[selection]);
                     console_buffer += string_resetFormatting(console_buffer);
                 }
@@ -331,7 +343,8 @@ options :\n\
             else
             {
                 console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_YELLOW);
-                console_buffer += string_write(console_buffer, FILE_ICON);
+                if (useEmojis)
+                    console_buffer += string_write(console_buffer, FILE_ICON);
                 console_buffer += string_write(console_buffer, files[selection - foldersCount]);
                 console_buffer += string_resetFormatting(console_buffer);
             }
