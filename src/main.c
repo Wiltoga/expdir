@@ -205,7 +205,7 @@ options :\n\
                     console_buffer += string_resetFormatting(console_buffer);
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_YELLOW);
                     console_buffer += string_write(console_buffer, " -> ");
-                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_GREEN);
+                    console_buffer += string_formatSystemForeground(console_buffer, !access(__fullDir, R_OK) ? CONSOLE_COLOR_BRIGHT_GREEN : CONSOLE_COLOR_RED);
                     char __tmp1[256];
                     char __tmp2[256];
                     __tmp1[readlink(__fullDir, __tmp1, 256)] = '\0';
@@ -215,7 +215,7 @@ options :\n\
                 }
                 else
                 {
-                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_WHITE);
+                    console_buffer += string_formatSystemForeground(console_buffer, !access(__fullDir, R_OK) ? CONSOLE_COLOR_WHITE : CONSOLE_COLOR_RED);
                     console_buffer += string_write(console_buffer, strcmp(folders[i], "..") ? FOLDER_ICON : PARENT_ICON);
                     console_buffer += string_write(console_buffer, folders[i]);
                     console_buffer += string_resetFormatting(console_buffer);
@@ -270,7 +270,7 @@ options :\n\
                     console_buffer += string_resetFormatting(console_buffer);
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_YELLOW);
                     console_buffer += string_write(console_buffer, " -> ");
-                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_GREEN);
+                    console_buffer += string_formatSystemForeground(console_buffer, !access(__fullDir, R_OK) ? CONSOLE_COLOR_BRIGHT_GREEN : CONSOLE_COLOR_RED);
                     char __tmp1[256];
                     char __tmp2[256];
                     __tmp1[readlink(__fullDir, __tmp1, 256)] = '\0';
@@ -280,7 +280,7 @@ options :\n\
                 }
                 else
                 {
-                    console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_WHITE, CONSOLE_FLAG_REVERSE_COLOR);
+                    console_buffer += string_formatSystemForegroundMode(console_buffer, !access(__fullDir, R_OK) ? CONSOLE_COLOR_WHITE : CONSOLE_COLOR_RED, CONSOLE_FLAG_REVERSE_COLOR);
                     console_buffer += string_write(console_buffer, strcmp(folders[selection], "..") ? FOLDER_ICON : PARENT_ICON);
                     console_buffer += string_write(console_buffer, folders[selection]);
                     console_buffer += string_resetFormatting(console_buffer);
@@ -312,7 +312,7 @@ options :\n\
                     console_buffer += string_resetFormatting(console_buffer);
                     console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_YELLOW);
                     console_buffer += string_write(console_buffer, " -> ");
-                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_GREEN);
+                    console_buffer += string_formatSystemForeground(console_buffer, !access(__fullDir, R_OK) ? CONSOLE_COLOR_BRIGHT_GREEN : CONSOLE_COLOR_RED);
                     char __tmp1[256];
                     char __tmp2[256];
                     __tmp1[readlink(__fullDir, __tmp1, 256)] = '\0';
@@ -322,7 +322,7 @@ options :\n\
                 }
                 else
                 {
-                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_WHITE);
+                    console_buffer += string_formatSystemForeground(console_buffer, !access(__fullDir, R_OK) ? CONSOLE_COLOR_WHITE : CONSOLE_COLOR_RED);
                     console_buffer += string_write(console_buffer, strcmp(folders[selection], "..") ? FOLDER_ICON : PARENT_ICON);
                     console_buffer += string_write(console_buffer, folders[selection]);
                     console_buffer += string_resetFormatting(console_buffer);
@@ -373,21 +373,27 @@ options :\n\
             }
             else if ((key == 10 && selection < foldersCount) || (key == 9 && !strcmp(folders[0], "..")))
             {
-                if (key == 9)
-                    selection = 0;
-                fullRefresh = true;
-                refresh = true;
-                if (!strcmp(folders[0], ".."))
+                char __fullDir[256];
+                strcpy(__fullDir, dir);
+                file_combine(__fullDir, folders[selection]);
+                if (!access(__fullDir, R_OK))
                 {
-                    strcpy(base_buffer, dir);
-                    base_buffer[strlen(base_buffer) - 1] = '\0';
-                    file_filename(base_buffer, parentBuffer);
-                    currParent = parentBuffer;
+                    if (key == 9)
+                        selection = 0;
+                    fullRefresh = true;
+                    refresh = true;
+                    if (!strcmp(folders[0], ".."))
+                    {
+                        strcpy(base_buffer, dir);
+                        base_buffer[strlen(base_buffer) - 1] = '\0';
+                        file_filename(base_buffer, parentBuffer);
+                        currParent = parentBuffer;
+                    }
+                    else
+                        currParent = NULL;
+                    snprintf(base_buffer, 256, "%s/", folders[selection]);
+                    file_combine(dir, base_buffer);
                 }
-                else
-                    currParent = NULL;
-                snprintf(base_buffer, 256, "%s/", folders[selection]);
-                file_combine(dir, base_buffer);
             }
             else if (key == 32)
             {
