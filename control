@@ -5,4 +5,4 @@ Architecture: all
 Essential: no
 Installed-Size: 1024
 Maintainer: Wildgoat
-Description: File explorer to move the current working directory
+Description: File explorer to change the current working directory
