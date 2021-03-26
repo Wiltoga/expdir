@@ -434,7 +434,7 @@ options :\n\
                 char __fullDir[256];
                 strcpy(__fullDir, dir);
                 file_combine(__fullDir, folders[selection]);
-                if (!access(__fullDir, R_OK))
+                if (!access(__fullDir, R_OK) || (key == 9 && !strcmp(folders[0], "..")))
                 {
                     if (key == 9)
                         selection = 0;
