@@ -8,6 +8,7 @@ void file_filename(char *path, char *buffer);
 bool file_exists(char *path);
 void file_dirname(char *path, char *buffer);
 bool file_isDir(char *path);
+bool file_isLink(char *path);
 void simplifyString(char *str, char *buffer);
 size_t listScore(char **list, size_t listSize, char *keyHistory);
 bool stringStartWith(char *str, char *start);

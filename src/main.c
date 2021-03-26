@@ -14,6 +14,7 @@
 typedef struct dirent dirent;
 
 void replaceStartingString(void *dest, char *src, char *pattern, char *override);
+void applyAliases(void *dest, char *src, char **patterns, char **overrides, size_t count);
 
 int main(int argc, char **argv)
 {
@@ -172,15 +173,9 @@ options :\n\
         console_buffer += string_write(console_buffer, "Current directory : ");
         console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_BLUE);
         {
-            char __tmp1[256];
-            strcpy(__tmp1, dir);
-            char __tmp2[256];
-            for (int i = 0; i < patternCount; ++i)
-            {
-                replaceStartingString(__tmp2, __tmp1, patterns[i], overrides[i]);
-                strcpy(__tmp1, __tmp2);
-            }
-            console_buffer += string_write(console_buffer, __tmp1);
+            char __tmp[256];
+            applyAliases(__tmp, dir, patterns, overrides, patternCount);
+            console_buffer += string_write(console_buffer, __tmp);
         }
         console_buffer += string_resetFormatting(console_buffer);
         console_buffer += string_setCursorPosition(console_buffer, 1, 2);
@@ -195,9 +190,30 @@ options :\n\
             console_buffer += string_setCursorPosition(console_buffer, 1, 3 + i - page * MAX_LINES_PER_PAGE);
             if (i < foldersCount)
             {
-                console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_WHITE);
-                console_buffer += string_write(console_buffer, folders[i]);
-                console_buffer += string_resetFormatting(console_buffer);
+                char __fullDir[256];
+                strcpy(__fullDir, dir);
+                file_combine(__fullDir, folders[i]);
+                if (file_isLink(__fullDir))
+                {
+                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_CYAN);
+                    console_buffer += string_write(console_buffer, folders[i]);
+                    console_buffer += string_resetFormatting(console_buffer);
+                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_YELLOW);
+                    console_buffer += string_write(console_buffer, " -> ");
+                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_GREEN);
+                    char __tmp1[256];
+                    char __tmp2[256];
+                    __tmp1[readlink(__fullDir, __tmp1, 256)] = '\0';
+                    applyAliases(__tmp2, __tmp1, patterns, overrides, patternCount);
+                    console_buffer += string_write(console_buffer, __tmp2);
+                    console_buffer += string_resetFormatting(console_buffer);
+                }
+                else
+                {
+                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_WHITE);
+                    console_buffer += string_write(console_buffer, folders[i]);
+                    console_buffer += string_resetFormatting(console_buffer);
+                }
             }
             else
             {
@@ -236,9 +252,30 @@ options :\n\
             console_buffer += string_setCursorPosition(console_buffer, 1, selection - page * MAX_LINES_PER_PAGE + 3);
             if (selection < foldersCount)
             {
-                console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_WHITE, CONSOLE_FLAG_REVERSE_COLOR);
-                console_buffer += string_write(console_buffer, folders[selection]);
-                console_buffer += string_resetFormatting(console_buffer);
+                char __fullDir[256];
+                strcpy(__fullDir, dir);
+                file_combine(__fullDir, folders[selection]);
+                if (file_isLink(__fullDir))
+                {
+                    console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_BRIGHT_CYAN, CONSOLE_FLAG_REVERSE_COLOR);
+                    console_buffer += string_write(console_buffer, folders[selection]);
+                    console_buffer += string_resetFormatting(console_buffer);
+                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_YELLOW);
+                    console_buffer += string_write(console_buffer, " -> ");
+                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_GREEN);
+                    char __tmp1[256];
+                    char __tmp2[256];
+                    __tmp1[readlink(__fullDir, __tmp1, 256)] = '\0';
+                    applyAliases(__tmp2, __tmp1, patterns, overrides, patternCount);
+                    console_buffer += string_write(console_buffer, __tmp2);
+                    console_buffer += string_resetFormatting(console_buffer);
+                }
+                else
+                {
+                    console_buffer += string_formatSystemForegroundMode(console_buffer, CONSOLE_COLOR_WHITE, CONSOLE_FLAG_REVERSE_COLOR);
+                    console_buffer += string_write(console_buffer, folders[selection]);
+                    console_buffer += string_resetFormatting(console_buffer);
+                }
             }
             else
             {
@@ -254,9 +291,30 @@ options :\n\
             console_buffer += string_setCursorPosition(console_buffer, 1, selection - page * MAX_LINES_PER_PAGE + 3);
             if (selection < foldersCount)
             {
-                console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_WHITE);
-                console_buffer += string_write(console_buffer, folders[selection]);
-                console_buffer += string_resetFormatting(console_buffer);
+                char __fullDir[256];
+                strcpy(__fullDir, dir);
+                file_combine(__fullDir, folders[selection]);
+                if (file_isLink(__fullDir))
+                {
+                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_CYAN);
+                    console_buffer += string_write(console_buffer, folders[selection]);
+                    console_buffer += string_resetFormatting(console_buffer);
+                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_YELLOW);
+                    console_buffer += string_write(console_buffer, " -> ");
+                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_BRIGHT_GREEN);
+                    char __tmp1[256];
+                    char __tmp2[256];
+                    __tmp1[readlink(__fullDir, __tmp1, 256)] = '\0';
+                    applyAliases(__tmp2, __tmp1, patterns, overrides, patternCount);
+                    console_buffer += string_write(console_buffer, __tmp2);
+                    console_buffer += string_resetFormatting(console_buffer);
+                }
+                else
+                {
+                    console_buffer += string_formatSystemForeground(console_buffer, CONSOLE_COLOR_WHITE);
+                    console_buffer += string_write(console_buffer, folders[selection]);
+                    console_buffer += string_resetFormatting(console_buffer);
+                }
             }
             else
             {
@@ -339,7 +397,7 @@ options :\n\
                 refresh = true;
                 fullRefresh = true;
             }
-            else
+            else if (key >= 'a' && key <= 'z')
             {
                 *letterHistory = key;
                 letterHistory++;
@@ -367,6 +425,19 @@ options :\n\
     free(parentBuffer);
     free(_history);
     return 0;
+}
+
+void applyAliases(void *dest, char *src, char **patterns, char **overrides, size_t count)
+{
+    char __tmp1[256];
+    strcpy(__tmp1, src);
+    char __tmp2[256];
+    for (int i = 0; i < count; ++i)
+    {
+        replaceStartingString(__tmp2, __tmp1, patterns[i], overrides[i]);
+        strcpy(__tmp1, __tmp2);
+    }
+    strcpy(dest, __tmp1);
 }
 
 void replaceStartingString(void *dest, char *src, char *pattern, char *override)

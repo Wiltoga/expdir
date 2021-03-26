@@ -44,6 +44,12 @@ bool file_isDir(char *path)
     stat(path, &path_stat);
     return !S_ISREG(path_stat.st_mode);
 }
+bool file_isLink(char *path)
+{
+    struct stat path_stat;
+    lstat(path, &path_stat);
+    return S_ISLNK(path_stat.st_mode);
+}
 int64_t hashSpecialChar(char *c)
 {
     return ((int64_t)c[0] << 8) | (int64_t)c[1];
