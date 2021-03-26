@@ -80,7 +80,6 @@ int main(int argc, char **argv)
     bool displayFiles = false;
     bool useEmojis = false;
     bool showHelp = false;
-    int counter = -1;
     for (int i = 1; i < argc; ++i)
     {
         if (argv[i][0] == '-' && argv[i][1] != '-')
@@ -92,8 +91,6 @@ int main(int argc, char **argv)
                     displayHidden = true;
                 else if (argv[i][j] == 'f')
                     displayFiles = true;
-                else if (argv[i][j] == 'c')
-                    counter = i + 1;
                 else if (argv[i][j] == 'e')
                     useEmojis = true;
                 else if (argv[i][j] == 'h')
@@ -104,8 +101,6 @@ int main(int argc, char **argv)
             displayHidden = true;
         else if (!strcmp(argv[i], "--files"))
             displayFiles = true;
-        else if (!strcmp(argv[i], "--count"))
-            counter = i + 1;
         else if (!strcmp(argv[i], "--emojis"))
             useEmojis = true;
         else if (!strcmp(argv[i], "--help"))
@@ -125,25 +120,21 @@ int main(int argc, char **argv)
                 }
             }
         }
-        if (counter == i + 1)
-            ++i;
         if (showHelp)
         {
             printf(
                 "Usage :\n\
-    expdir [<options>]\n\
+    expdir [<options>] [<path>]\n\
 options :\n\
     -h, --help          displays this help panel\n\
     -a, --all           displays hidden entries\n\
     -f, --files         displays files\n\
     -e, --emojis        displays emojis icons\n\
-    -c, --count <n>     change the number of lines displayed per page (max available by default)\n\
-    <path>      start the browser in this directory\n");
+\n\
+<path> :        start the browser in this directory\n");
             return 0;
         }
     }
-    if (counter != -1)
-        __max_lines__ = atoi(argv[counter]);
     file_dirname(*argv, base_buffer);
     chdir(base_buffer);
     bool fullRefresh = true;
