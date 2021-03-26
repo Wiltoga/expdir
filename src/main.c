@@ -164,9 +164,6 @@ options :\n\
                 pagesCount++;
             if (selection == -1)
                 selection = !strcmp(folders[0], "..") && foldersCount > 1 ? 1 : 0;
-            for (int i = 0; i < foldersCount; ++i)
-                printf("%s\n", folders[i]);
-            getch();
         }
         page = selection / MAX_LINES_PER_PAGE;
         void *console_buffer = __consoleBuffer;
