@@ -17,6 +17,7 @@
 #define LINK_ICON "🔗"
 #define INVALID_ICON "❌"
 #define FULL_SEPARATOR ""
+#define SIMLPE_SEPARATOR ""
 
 #define FOLDER_COLOR SYSTEM_COLOR_BRIGHT_YELLOW
 #define FILE_COLOR SYSTEM_COLOR_WHITE
@@ -31,6 +32,7 @@ void replaceStartingString(void *dest, char *src, char *pattern, char *override)
 void applyAliases(void *dest, char *src, char **patterns, char **overrides, size_t count);
 size_t displayFolder(char *buffer, char *folderName, char *dir, bool useEmojis, char **patterns, char **overrides, size_t patternCount, bool reverse);
 size_t displayFile(char *buffer, char *fileName, bool useEmojis, bool reverse);
+size_t emojify(char *dest, char *src);
 
 int main(int argc, char **argv)
 {
@@ -204,11 +206,12 @@ options :\n\
         console_buffer += string_resetFormatting(console_buffer);
         console_buffer += string_clearScreen(console_buffer);
         console_buffer += sizeof(char) * sprintf(console_buffer, "Current directory : ");
-        console_buffer += string_formatForeground(console_buffer, FOLDER_COLOR);
         {
+            if (!useEmojis)
+                console_buffer += string_formatForeground(console_buffer, FOLDER_COLOR);
             char __tmp[256];
             applyAliases(__tmp, dir, patterns, overrides, patternCount);
-            console_buffer += sizeof(char) * sprintf(console_buffer, "%s", __tmp);
+            console_buffer += useEmojis ? emojify(console_buffer, __tmp) : sizeof(char) * sprintf(console_buffer, "%s", __tmp);
         }
         console_buffer += string_resetFormatting(console_buffer);
         console_buffer += string_setCursorPosition(console_buffer, 1, 2);
@@ -417,6 +420,7 @@ size_t displayFile(char *buffer, char *fileName, bool useEmojis, bool reverse)
     buffer += sizeof(char) * sprintf(buffer, "%s", fileName);
     if (useEmojis && reverse)
     {
+        buffer += sizeof(char) * sprintf(buffer, " ");
         buffer += string_resetFormatting(buffer);
         buffer += string_formatForeground(buffer, FILE_COLOR);
         buffer += sizeof(char) * sprintf(buffer, FULL_SEPARATOR);
@@ -445,12 +449,13 @@ size_t displayFolder(char *buffer, char *folderName, char *dir, bool useEmojis, 
             buffer += sizeof(char) * sprintf(buffer, "/");
         else if (useEmojis && reverse)
         {
+            buffer += sizeof(char) * sprintf(buffer, " ");
             buffer += string_resetFormatting(buffer);
             buffer += string_formatForeground(buffer, LINK_COLOR);
             buffer += sizeof(char) * sprintf(buffer, FULL_SEPARATOR);
         }
         else
-            buffer += sizeof(char) * sprintf(buffer, " ");
+            buffer += sizeof(char) * sprintf(buffer, "  ");
         buffer += string_eraseEndOfLine(buffer);
         buffer += string_resetFormatting(buffer);
         buffer += string_formatForeground(buffer, OPERATOR_COLOR);
@@ -477,14 +482,53 @@ size_t displayFolder(char *buffer, char *folderName, char *dir, bool useEmojis, 
             buffer += sizeof(char) * sprintf(buffer, "/");
         else if (useEmojis && reverse)
         {
+            buffer += sizeof(char) * sprintf(buffer, " ");
             buffer += string_resetFormatting(buffer);
             buffer += string_formatForeground(buffer, FOLDER_COLOR);
             buffer += sizeof(char) * sprintf(buffer, FULL_SEPARATOR);
         }
         else
-            buffer += sizeof(char) * sprintf(buffer, " ");
+            buffer += sizeof(char) * sprintf(buffer, "  ");
         buffer += string_resetFormatting(buffer);
     }
     buffer += string_eraseEndOfLine(buffer);
     return (size_t)buffer - start;
+}
+
+size_t emojify(char *dest, char *src)
+{
+    unsigned long init = (unsigned long)dest;
+    while (*src == '/')
+        ++src;
+    dest += string_formatForeground(dest, color_create(180, 180, 180));
+    dest += string_formatBackground(dest, color_create(50, 50, 50));
+    if (*src == '\0')
+        dest += sizeof(char) * sprintf(dest, " / ");
+    else
+    {
+        char __tmp[128];
+        bool first = true;
+        while (*src != '\0')
+        {
+            char *folderName = __tmp;
+            while (*src != '/')
+            {
+                *folderName = *src;
+                src += sizeof(char);
+                folderName += sizeof(char);
+            }
+            ++src;
+            *folderName = '\0';
+            if (!first)
+                dest += sizeof(char) * sprintf(dest, SIMLPE_SEPARATOR);
+            else
+                first = false;
+            dest += sizeof(char) * sprintf(dest, " %s ", __tmp);
+        }
+    }
+    dest += string_resetFormatting(dest);
+    dest += string_formatForeground(dest, color_create(50, 50, 50));
+    dest += sizeof(char) * sprintf(dest, FULL_SEPARATOR);
+    dest += string_resetFormatting(dest);
+    return (unsigned long)dest - init;
 }
