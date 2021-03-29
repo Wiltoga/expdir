@@ -4,7 +4,7 @@
 
 here is an example of what it looks like :
 
-![](https://i.gyazo.com/11fee308061aac5e65b89dcf5b0c45f4.png)
+![](https://user-images.githubusercontent.com/30344403/112698404-e646de80-8e89-11eb-9706-0b627dbef2f4.png)
 
 You can control the cursor using the arrow keys and validate the directory using the space key.
 
