@@ -16,6 +16,7 @@
 #define PARENT_ICON "↩️"
 #define LINK_ICON "🔗"
 #define INVALID_ICON "❌"
+#define FULL_SEPARATOR ""
 
 #define FOLDER_COLOR SYSTEM_COLOR_BRIGHT_YELLOW
 #define FILE_COLOR SYSTEM_COLOR_WHITE
@@ -414,7 +415,14 @@ size_t displayFile(char *buffer, char *fileName, bool useEmojis, bool reverse)
     if (useEmojis)
         buffer += sizeof(char) * sprintf(buffer, FILE_ICON);
     buffer += sizeof(char) * sprintf(buffer, "%s", fileName);
+    if (useEmojis && reverse)
+    {
+        buffer += string_resetFormatting(buffer);
+        buffer += string_formatForeground(buffer, FILE_COLOR);
+        buffer += sizeof(char) * sprintf(buffer, FULL_SEPARATOR);
+    }
     buffer += string_resetFormatting(buffer);
+    buffer += string_eraseEndOfLine(buffer);
     return (size_t)buffer - start;
 }
 
@@ -433,7 +441,17 @@ size_t displayFolder(char *buffer, char *folderName, char *dir, bool useEmojis, 
         if (useEmojis)
             buffer += sizeof(char) * sprintf(buffer, !access(__fullDir, R_OK) ? LINK_ICON : INVALID_ICON);
         buffer += sizeof(char) * sprintf(buffer, "%s", folderName);
-        buffer += sizeof(char) * sprintf(buffer, "/");
+        if (!useEmojis)
+            buffer += sizeof(char) * sprintf(buffer, "/");
+        else if (useEmojis && reverse)
+        {
+            buffer += string_resetFormatting(buffer);
+            buffer += string_formatForeground(buffer, LINK_COLOR);
+            buffer += sizeof(char) * sprintf(buffer, FULL_SEPARATOR);
+        }
+        else
+            buffer += sizeof(char) * sprintf(buffer, " ");
+        buffer += string_eraseEndOfLine(buffer);
         buffer += string_resetFormatting(buffer);
         buffer += string_formatForeground(buffer, OPERATOR_COLOR);
         buffer += sizeof(char) * sprintf(buffer, " -> ");
@@ -455,8 +473,18 @@ size_t displayFolder(char *buffer, char *folderName, char *dir, bool useEmojis, 
         if (useEmojis)
             buffer += sizeof(char) * sprintf(buffer, strcmp(folderName, "..") ? !access(__fullDir, R_OK) ? FOLDER_ICON : INVALID_ICON : PARENT_ICON);
         buffer += sizeof(char) * sprintf(buffer, "%s", folderName);
-        buffer += sizeof(char) * sprintf(buffer, "/");
+        if (!useEmojis)
+            buffer += sizeof(char) * sprintf(buffer, "/");
+        else if (useEmojis && reverse)
+        {
+            buffer += string_resetFormatting(buffer);
+            buffer += string_formatForeground(buffer, FOLDER_COLOR);
+            buffer += sizeof(char) * sprintf(buffer, FULL_SEPARATOR);
+        }
+        else
+            buffer += sizeof(char) * sprintf(buffer, " ");
         buffer += string_resetFormatting(buffer);
     }
+    buffer += string_eraseEndOfLine(buffer);
     return (size_t)buffer - start;
 }
