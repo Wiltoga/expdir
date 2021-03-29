@@ -488,7 +488,7 @@ size_t displayFolder(char *buffer, char *folderName, char *dir, bool useEmojis, 
         {
             buffer += sizeof(char) * sprintf(buffer, " ");
             buffer += string_resetFormatting(buffer);
-            buffer += string_formatForeground(buffer, FOLDER_COLOR);
+            buffer += string_formatForeground(buffer, !access(__fullDir, R_OK) ? FOLDER_COLOR : INVALID_COLOR);
             buffer += sizeof(char) * sprintf(buffer, FULL_SEPARATOR);
         }
         else
