@@ -91,6 +91,8 @@ int main(int argc, char **argv)
                     displayHidden = true;
                 else if (argv[i][j] == 'f')
                     displayFiles = true;
+                else if (argv[i][j] == 'v')
+                    useEmojis = true;
                 else if (argv[i][j] == 'e')
                     useEmojis = true;
                 else if (argv[i][j] == 'h')
@@ -102,6 +104,8 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--files"))
             displayFiles = true;
         else if (!strcmp(argv[i], "--emojis"))
+            useEmojis = true;
+        else if (!strcmp(argv[i], "--visuals"))
             useEmojis = true;
         else if (!strcmp(argv[i], "--help"))
             showHelp = true;
@@ -129,7 +133,7 @@ options :\n\
     -h, --help          displays this help panel\n\
     -a, --all           displays hidden entries\n\
     -f, --files         displays files\n\
-    -e, --emojis        displays emojis icons\n\
+    -v, --visuals        displays more visual stuff\n\
 \n\
 <path> :        start the browser in this directory\n");
             return 0;
