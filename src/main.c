@@ -43,6 +43,7 @@
 #define SPACE_KEY 32
 #define CTRL_X 24
 #define BACKSPACE 127
+#define CTRL_BACKSPACE 8
 
 typedef struct dirent dirent;
 
@@ -467,6 +468,12 @@ options :\n\
                     searchHistory[historyLen - 1] = '\0';
                     refresh = true;
                 }
+            }
+            else if (key == CTRL_BACKSPACE)
+            {
+                konamiCounter = 0;
+                searchHistory[0] = '\0';
+                refresh = true;
             }
             else
             {
