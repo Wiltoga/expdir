@@ -48,7 +48,7 @@ After the intallation, you have to reboot for it to take effect.
 First install the dependencies to build the project :
 ```sh
 sudo apt update
-sudo apt install build-essential
+sudo apt install build-essential libncurses5-dev libncursesw5-dev
 ```
 To build, clone this repository, then build using the makefile.
 You can also generate the .deb using `make deb`. It will be in the ./package folder.
