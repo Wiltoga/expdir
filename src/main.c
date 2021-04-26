@@ -179,11 +179,13 @@ options :\n\
     int pagesCount;
     char searchHistory[MAX_SEARCH_LENGTH + 1];
     char *__consoleBuffer = (char *)malloc(1024 * 1024 * 2 * sizeof(char));
+    bool searchChanged = false;
     while (!validate)
     {
         if (fullRefresh)
         {
             searchHistory[0] = '\0';
+            searchChanged = true;
             fullRefresh = false;
             for (int i = 0; i < filesCount; ++i)
                 free(files[i]);
@@ -226,18 +228,22 @@ options :\n\
         }
         size_t filteredFoldersCount = filterList(folders, foldersCount, filteredFolders, searchHistory);
         size_t filteredFilesCount = filterList(files, filesCount, filteredFiles, searchHistory);
-        for (size_t i = 0; i < filteredFoldersCount; ++i)
+        if (searchChanged)
         {
-            char simplified[128];
-            simplifyString(filteredFolders[i], simplified);
-            if (stringStartWith(simplified, searchHistory))
+            for (size_t i = 0; i < filteredFoldersCount; ++i)
             {
-                selection = i;
-                break;
+                char simplified[128];
+                simplifyString(filteredFolders[i], simplified);
+                if (stringStartWith(simplified, searchHistory))
+                {
+                    selection = i;
+                    break;
+                }
             }
+            if (selection >= filteredFoldersCount || !strcmp(filteredFolders[selection], ".."))
+                selection = anyEntry(filteredFolders, filteredFoldersCount) ? 1 : 0;
+            searchChanged = false;
         }
-        if (selection >= filteredFoldersCount || !strcmp(filteredFolders[selection], ".."))
-            selection = anyEntry(filteredFolders, filteredFoldersCount) ? 1 : 0;
         pagesCount = (filteredFoldersCount + filteredFilesCount) / MAX_LINES_PER_PAGE;
         if ((filteredFoldersCount + filteredFilesCount) % MAX_LINES_PER_PAGE)
             pagesCount++;
@@ -467,6 +473,7 @@ options :\n\
                 {
                     searchHistory[historyLen - 1] = '\0';
                     refresh = true;
+                    searchChanged = true;
                 }
             }
             else if (key == CTRL_BACKSPACE)
@@ -474,6 +481,7 @@ options :\n\
                 konamiCounter = 0;
                 searchHistory[0] = '\0';
                 refresh = true;
+                searchChanged = true;
             }
             else
             {
@@ -498,6 +506,7 @@ options :\n\
                         searchHistory[historyLen] = key;
                         searchHistory[historyLen + 1] = '\0';
                         refresh = true;
+                        searchChanged = true;
                     }
                 }
             }
