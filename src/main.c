@@ -12,6 +12,7 @@
 
 #define MAX_LINES_PER_PAGE __max_lines__
 #define MAX_SEARCH_LENGTH 64
+#define MIN_SEARCH_BAR_LENGTH 20
 
 #define FOLDER_ICON "📁"
 #define FILE_ICON "📄"
@@ -234,7 +235,7 @@ options :\n\
                 break;
             }
         }
-        if (selection >= filteredFoldersCount)
+        if (selection >= filteredFoldersCount || selection == 0)
             selection = filteredFoldersCount != 1 ? 1 : 0;
         pagesCount = (filteredFoldersCount + filteredFilesCount) / MAX_LINES_PER_PAGE;
         if ((filteredFoldersCount + filteredFilesCount) % MAX_LINES_PER_PAGE)
@@ -259,6 +260,26 @@ options :\n\
             console_buffer += string_setCursorPosition(console_buffer, 1, 2);
             console_buffer += string_formatMode(console_buffer, CONSOLE_FLAG_UNDERLINE);
             console_buffer += snprintf(console_buffer, 200, "Page %d/%d            ", page + 1, pagesCount);
+            console_buffer += string_resetFormatting(console_buffer);
+            console_buffer += string_setCursorPosition(console_buffer, 15, 2);
+            console_buffer += string_formatColor(console_buffer, SYSTEM_COLOR_BLACK, SYSTEM_COLOR_WHITE);
+            console_buffer += sprintf(console_buffer, " %s", useEmojis ? SEARCH " " : "Search:");
+            console_buffer += string_formatColor(console_buffer, searchHistory[0] == '\0' || filteredFoldersCount != 1 ? SYSTEM_COLOR_GREEN : SYSTEM_COLOR_RED, SYSTEM_COLOR_WHITE);
+            console_buffer += string_formatMode(console_buffer, CONSOLE_FLAG_UNDERLINE);
+            console_buffer += sprintf(console_buffer, "%s", searchHistory);
+            size_t searchLen = strlen(searchHistory);
+            if (searchLen < MIN_SEARCH_BAR_LENGTH)
+                for (int i = searchLen; i < MIN_SEARCH_BAR_LENGTH; ++i)
+                    console_buffer += sprintf(console_buffer, " ");
+            console_buffer += string_resetFormatting(console_buffer);
+            console_buffer += string_formatColor(console_buffer, SYSTEM_COLOR_BLACK, SYSTEM_COLOR_WHITE);
+            console_buffer += sprintf(console_buffer, " ");
+            if (useEmojis)
+            {
+                console_buffer += string_resetFormatting(console_buffer);
+                console_buffer += string_formatForeground(console_buffer, SYSTEM_COLOR_WHITE);
+                console_buffer += sprintf(console_buffer, FULL_SEPARATOR);
+            }
             console_buffer += string_resetFormatting(console_buffer);
             int displayedCount = (page + 1 == pagesCount) ? (filteredFoldersCount + filteredFilesCount) : MAX_LINES_PER_PAGE;
             if (displayedCount > MAX_LINES_PER_PAGE)
