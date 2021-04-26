@@ -11,6 +11,7 @@
 #include "aliases.h"
 
 #define MAX_LINES_PER_PAGE __max_lines__
+#define MAX_SEARCH_LENGTH 64
 
 #define FOLDER_ICON "📁"
 #define FILE_ICON "📄"
@@ -19,6 +20,7 @@
 #define INVALID_ICON "❌"
 #define FULL_SEPARATOR ""
 #define SIMLPE_SEPARATOR ""
+#define SEARCH "🔍"
 
 #define FOLDER_COLOR SYSTEM_COLOR_BRIGHT_YELLOW
 #define FILE_COLOR SYSTEM_COLOR_WHITE
@@ -28,6 +30,18 @@
 #define INVALID_COLOR SYSTEM_COLOR_RED
 #define HACKY_COLOR_FRONT SYSTEM_COLOR_GREEN
 #define HACKY_COLOR_BACK SYSTEM_COLOR_BLACK
+
+#define CTRL_R 18
+#define ARROW_START 27
+#define UP_ARROW 65
+#define DOWN_ARROW 66
+#define LEFT_ARROW 68
+#define RIGHT_ARROW 67
+#define RETURN_KEY 10
+#define TAB_KEY 9
+#define SPACE_KEY 32
+#define CTRL_X 24
+#define BACKSPACE 127
 
 typedef struct dirent dirent;
 
@@ -151,22 +165,23 @@ options :\n\
     bool fullRefresh = true;
     bool validate = false;
     char **folders = (char **)malloc(1024 * sizeof(char));
+    char **filteredFolders = (char **)malloc(1024 * sizeof(char));
     folders[0] = NULL;
     size_t foldersCount = 0;
     char **files = (char **)malloc(1024 * sizeof(char));
+    char **filteredFiles = (char **)malloc(1024 * sizeof(char));
     files[0] = NULL;
     size_t filesCount = 0;
     int selection;
     int page;
     int pagesCount;
-    char *_history = (char *)malloc(512 * sizeof(char));
-    char *letterHistory;
+    char searchHistory[MAX_SEARCH_LENGTH + 1];
     char *__consoleBuffer = (char *)malloc(1024 * 1024 * 2 * sizeof(char));
     while (!validate)
     {
         if (fullRefresh)
         {
-            letterHistory = _history;
+            searchHistory[0] = '\0';
             fullRefresh = false;
             for (int i = 0; i < filesCount; ++i)
                 free(files[i]);
@@ -207,11 +222,15 @@ options :\n\
             ioctl(0, TIOCGWINSZ, &w);
             __max_lines__ = w.ws_row - 3;
         }
-        pagesCount = (foldersCount + filesCount) / MAX_LINES_PER_PAGE;
-        if ((foldersCount + filesCount) % MAX_LINES_PER_PAGE)
+        size_t filteredFoldersCount = filterList(folders, foldersCount, filteredFolders, searchHistory);
+        size_t filteredFilesCount = filterList(files, filesCount, filteredFiles, searchHistory);
+        if (selection >= filteredFoldersCount)
+            selection = filteredFoldersCount != 1 ? 1 : 0;
+        pagesCount = (filteredFoldersCount + filteredFilesCount) / MAX_LINES_PER_PAGE;
+        if ((filteredFoldersCount + filteredFilesCount) % MAX_LINES_PER_PAGE)
             pagesCount++;
         if (selection == -1)
-            selection = !strcmp(folders[0], "..") && foldersCount > 1 ? 1 : 0;
+            selection = !strcmp(filteredFolders[0], "..") && filteredFoldersCount > 1 ? 1 : 0;
         page = selection / MAX_LINES_PER_PAGE;
         void *console_buffer = __consoleBuffer;
         console_buffer += string_resetFormatting(console_buffer);
@@ -231,33 +250,30 @@ options :\n\
             console_buffer += string_formatMode(console_buffer, CONSOLE_FLAG_UNDERLINE);
             console_buffer += snprintf(console_buffer, 200, "Page %d/%d            ", page + 1, pagesCount);
             console_buffer += string_resetFormatting(console_buffer);
-            int displayedCount = (page + 1 == pagesCount) ? (foldersCount + filesCount) : MAX_LINES_PER_PAGE;
+            int displayedCount = (page + 1 == pagesCount) ? (filteredFoldersCount + filteredFilesCount) : MAX_LINES_PER_PAGE;
             if (displayedCount > MAX_LINES_PER_PAGE)
                 displayedCount %= MAX_LINES_PER_PAGE;
             for (int i = page * MAX_LINES_PER_PAGE; i < page * MAX_LINES_PER_PAGE + displayedCount; ++i)
             {
                 console_buffer += string_setCursorPosition(console_buffer, 1, 3 + i - page * MAX_LINES_PER_PAGE);
-                if (i < foldersCount)
-                    console_buffer += displayFolder(console_buffer, folders[i], dir, useEmojis, patterns, overrides, patternCount, false, false);
+                if (i < filteredFoldersCount)
+                    console_buffer += displayFolder(console_buffer, filteredFolders[i], dir, useEmojis, patterns, overrides, patternCount, false, false);
                 else
-                    console_buffer += displayFile(console_buffer, files[i - foldersCount], useEmojis, false, false);
+                    console_buffer += displayFile(console_buffer, filteredFiles[i - filteredFoldersCount], useEmojis, false, false);
             }
             console_buffer += string_setCursorPosition(console_buffer, 2, 3 + MAX_LINES_PER_PAGE);
             console_buffer += string_formatForegroundMode(console_buffer, SYSTEM_COLOR_BRIGHT_GREEN, CONSOLE_FLAG_REVERSE_COLOR);
             console_buffer += sizeof(char) * sprintf(console_buffer, "Space");
             console_buffer += string_resetFormatting(console_buffer);
-            console_buffer += sizeof(char) * sprintf(console_buffer, ":Open");
-            console_buffer += string_setCursorPosition(console_buffer, 13, 3 + MAX_LINES_PER_PAGE);
+            console_buffer += sizeof(char) * sprintf(console_buffer, ":Open ");
             console_buffer += string_formatForegroundMode(console_buffer, SYSTEM_COLOR_BRIGHT_RED, CONSOLE_FLAG_REVERSE_COLOR);
             console_buffer += sizeof(char) * sprintf(console_buffer, "^X");
             console_buffer += string_resetFormatting(console_buffer);
-            console_buffer += sizeof(char) * sprintf(console_buffer, ":Cancel");
-            console_buffer += string_setCursorPosition(console_buffer, 23, 3 + MAX_LINES_PER_PAGE);
+            console_buffer += sizeof(char) * sprintf(console_buffer, ":Cancel ");
             console_buffer += string_formatForegroundMode(console_buffer, SYSTEM_COLOR_BRIGHT_YELLOW, CONSOLE_FLAG_REVERSE_COLOR);
-            console_buffer += sizeof(char) * sprintf(console_buffer, "Backspace");
+            console_buffer += sizeof(char) * sprintf(console_buffer, "^R");
             console_buffer += string_resetFormatting(console_buffer);
-            console_buffer += sizeof(char) * sprintf(console_buffer, ":Refresh");
-            console_buffer += string_setCursorPosition(console_buffer, 41, 3 + MAX_LINES_PER_PAGE);
+            console_buffer += sizeof(char) * sprintf(console_buffer, ":Refresh ");
             console_buffer += string_formatForegroundMode(console_buffer, SYSTEM_COLOR_BRIGHT_BLUE, CONSOLE_FLAG_REVERSE_COLOR);
             console_buffer += sizeof(char) * sprintf(console_buffer, "Tab");
             console_buffer += string_resetFormatting(console_buffer);
@@ -280,16 +296,16 @@ options :\n\
             console_buffer += string_setCursorPosition(console_buffer, 1, 2);
             console_buffer += snprintf(console_buffer, 200, "Page %d/%d", page + 1, pagesCount);
             console_buffer += string_eraseEndOfLine(console_buffer);
-            int displayedCount = (page + 1 == pagesCount) ? (foldersCount + filesCount) : MAX_LINES_PER_PAGE;
+            int displayedCount = (page + 1 == pagesCount) ? (filteredFoldersCount + filteredFilesCount) : MAX_LINES_PER_PAGE;
             if (displayedCount > MAX_LINES_PER_PAGE)
                 displayedCount %= MAX_LINES_PER_PAGE;
             for (int i = page * MAX_LINES_PER_PAGE; i < page * MAX_LINES_PER_PAGE + displayedCount; ++i)
             {
                 console_buffer += string_setCursorPosition(console_buffer, 1, 3 + i - page * MAX_LINES_PER_PAGE);
-                if (i < foldersCount)
-                    console_buffer += displayFolder(console_buffer, folders[i], dir, false, patterns, overrides, patternCount, false, true);
+                if (i < filteredFoldersCount)
+                    console_buffer += displayFolder(console_buffer, filteredFolders[i], dir, false, patterns, overrides, patternCount, false, true);
                 else
-                    console_buffer += displayFile(console_buffer, files[i - foldersCount], false, false, true);
+                    console_buffer += displayFile(console_buffer, filteredFiles[i - filteredFoldersCount], false, false, true);
             }
             console_buffer += string_formatColor(console_buffer, HACKY_COLOR_FRONT, HACKY_COLOR_BACK);
             for (int i = displayedCount; i < MAX_LINES_PER_PAGE + 1; ++i)
@@ -302,27 +318,27 @@ options :\n\
         while (!refresh)
         {
             console_buffer += string_setCursorPosition(console_buffer, 1, selection - page * MAX_LINES_PER_PAGE + 3);
-            if (selection < foldersCount)
-                console_buffer += displayFolder(console_buffer, folders[selection], dir, !hackerMode && useEmojis, patterns, overrides, patternCount, true, hackerMode);
+            if (selection < filteredFoldersCount)
+                console_buffer += displayFolder(console_buffer, filteredFolders[selection], dir, !hackerMode && useEmojis, patterns, overrides, patternCount, true, hackerMode);
             else
-                console_buffer += displayFile(console_buffer, files[selection - foldersCount], !hackerMode && useEmojis, true, hackerMode);
+                console_buffer += displayFile(console_buffer, filteredFiles[selection - filteredFoldersCount], !hackerMode && useEmojis, true, hackerMode);
             console_buffer += string_setCursorPosition(console_buffer, 1, MAX_LINES_PER_PAGE + 4);
             *(char *)console_buffer = '\0';
             printf("%s", __consoleBuffer);
             console_buffer = __consoleBuffer;
             char key = getch();
             console_buffer += string_setCursorPosition(console_buffer, 1, selection - page * MAX_LINES_PER_PAGE + 3);
-            if (selection < foldersCount)
-                console_buffer += displayFolder(console_buffer, folders[selection], dir, !hackerMode && useEmojis, patterns, overrides, patternCount, false, hackerMode);
+            if (selection < filteredFoldersCount)
+                console_buffer += displayFolder(console_buffer, filteredFolders[selection], dir, !hackerMode && useEmojis, patterns, overrides, patternCount, false, hackerMode);
             else
-                console_buffer += displayFile(console_buffer, files[selection - foldersCount], !hackerMode && useEmojis, false, hackerMode);
+                console_buffer += displayFile(console_buffer, filteredFiles[selection - filteredFoldersCount], !hackerMode && useEmojis, false, hackerMode);
             console_buffer += string_setCursorPosition(console_buffer, 1, MAX_LINES_PER_PAGE + 4);
-            if (key == 27)
+            if (key == ARROW_START)
             {
                 getch();
                 switch (getch())
                 {
-                case 65: //up
+                case UP_ARROW:
                     if (konamiCounter == 0 || konamiCounter == 1)
                         ++konamiCounter;
                     else
@@ -332,17 +348,17 @@ options :\n\
                     if (selection % MAX_LINES_PER_PAGE == MAX_LINES_PER_PAGE - 1)
                         refresh = true;
                     break;
-                case 66: //down
+                case DOWN_ARROW:
                     if (konamiCounter == 2 || konamiCounter == 3)
                         ++konamiCounter;
                     else
                         konamiCounter = 0;
-                    if (selection < foldersCount + filesCount - 1)
+                    if (selection < filteredFoldersCount + filteredFilesCount - 1)
                         selection++;
                     if (selection % MAX_LINES_PER_PAGE == 0)
                         refresh = true;
                     break;
-                case 68: //left
+                case LEFT_ARROW:
                     if (konamiCounter == 4 || konamiCounter == 6)
                         ++konamiCounter;
                     else
@@ -353,7 +369,7 @@ options :\n\
                         refresh = true;
                     }
                     break;
-                case 67: //right
+                case RIGHT_ARROW:
                     if (konamiCounter == 5 || konamiCounter == 7)
                         ++konamiCounter;
                     else
@@ -361,22 +377,22 @@ options :\n\
                     if (page < pagesCount - 1)
                     {
                         selection += MAX_LINES_PER_PAGE;
-                        if (selection > foldersCount + filesCount - 1)
-                            selection = foldersCount + filesCount - 1;
+                        if (selection > filteredFoldersCount + filteredFilesCount - 1)
+                            selection = filteredFoldersCount + filteredFilesCount - 1;
                         refresh = true;
                     }
                     break;
                 }
             }
-            else if ((key == 10 && selection < foldersCount) || (key == 9 && !strcmp(folders[0], ".."))) //Return/Enter
+            else if ((key == RETURN_KEY && selection < filteredFoldersCount) || (key == TAB_KEY && !strcmp(folders[0], "..")))
             {
                 konamiCounter = 0;
                 char __fullDir[256];
                 strcpy(__fullDir, dir);
-                file_combine(__fullDir, selection < foldersCount ? folders[selection] : "..");
-                if (!access(__fullDir, R_OK) || (key == 9 && !strcmp(folders[0], "..")))
+                file_combine(__fullDir, selection < filteredFoldersCount ? filteredFolders[selection] : "..");
+                if (!access(__fullDir, R_OK) || (key == TAB_KEY && !strcmp(folders[0], "..")))
                 {
-                    if (key == 9)
+                    if (key == TAB_KEY)
                         selection = 0;
                     fullRefresh = true;
                     refresh = true;
@@ -385,11 +401,11 @@ options :\n\
                         strcpy(base_buffer, dir);
                         base_buffer[strlen(base_buffer) - 1] = '\0';
                     }
-                    snprintf(base_buffer, 256, "%s/", folders[selection]);
+                    snprintf(base_buffer, 256, "%s/", filteredFolders[selection]);
                     file_combine(dir, base_buffer);
                 }
             }
-            else if (key == 32) //Space
+            else if (key == SPACE_KEY)
             {
                 konamiCounter = 0;
                 refresh = true;
@@ -399,19 +415,29 @@ options :\n\
                 fflush(f);
                 fclose(f);
             }
-            else if (key == 24) //Ctrl+X
+            else if (key == CTRL_X)
             {
                 konamiCounter = 0;
                 refresh = true;
                 validate = true;
             }
-            else if (key == 127) //Backspace
+            else if (key == CTRL_R)
             {
                 konamiCounter = 0;
                 refresh = true;
                 fullRefresh = true;
             }
-            else if (key >= 'a' && key <= 'z')
+            else if (key == BACKSPACE)
+            {
+                konamiCounter = 0;
+                size_t historyLen = strlen(searchHistory);
+                if (historyLen > 0)
+                {
+                    searchHistory[historyLen - 1] = '\0';
+                    refresh = true;
+                }
+            }
+            else
             {
                 if (konamiCounter == 8 && key == 'b')
                     ++konamiCounter;
@@ -422,15 +448,21 @@ options :\n\
                 }
                 else
                     konamiCounter = 0;
-                *letterHistory = key;
-                letterHistory++;
-                *letterHistory = '\0';
-                selection = listScore(folders, foldersCount, _history);
-                if (page != selection / MAX_LINES_PER_PAGE)
-                    refresh = true;
+                char original[2] = " ", simple[2];
+                original[0] = key;
+                simplifyString(original, simple);
+                key = simple[0];
+                if (key >= 'a' && key <= 'z')
+                {
+                    size_t historyLen = strlen(searchHistory);
+                    if (historyLen < MAX_SEARCH_LENGTH)
+                    {
+                        searchHistory[historyLen] = key;
+                        searchHistory[historyLen + 1] = '\0';
+                        refresh = true;
+                    }
+                }
             }
-            else
-                konamiCounter = 0;
         }
     }
     for (int i = 0; i < patternCount; ++i)
@@ -447,7 +479,8 @@ options :\n\
     free(__consoleBuffer);
     free(folders);
     free(files);
-    free(_history);
+    free(filteredFolders);
+    free(filteredFiles);
     return 0;
 }
 

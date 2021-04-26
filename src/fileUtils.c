@@ -140,27 +140,6 @@ void simplifyString(char *str, char *buffer)
         }
     }
 }
-size_t listScore(char **list, size_t listSize, char *keyHistory)
-{
-    int bestId = 0;
-    int bestVal = -1;
-    size_t historyLen = strlen(keyHistory);
-    for (int i = 0; i < listSize; ++i)
-    {
-        int score = 0;
-        file_filename(list[i], NORMAL_BUFFER);
-        simplifyString(NORMAL_BUFFER, NORMAL_BUFFER);
-        for (int j = historyLen - 1; j >= 0; --j)
-            if (stringStartWith(NORMAL_BUFFER, keyHistory + j))
-                score = historyLen - j;
-        if (score > bestVal)
-        {
-            bestVal = score;
-            bestId = i;
-        }
-    }
-    return bestId;
-}
 bool stringStartWith(char *str, char *start)
 {
     while (*str == *start)
@@ -224,4 +203,27 @@ void file_sort(char **list, size_t listSize)
         }
         --max;
     } while (swapped);
+}
+bool match(char *str, char *filter)
+{
+    char buffer[128];
+    simplifyString(str, buffer);
+    size_t index = 0;
+    while (*filter != '\0')
+    {
+        if (buffer[index] == '\0')
+            return false;
+        else if (buffer[index] == *filter)
+            ++filter;
+        ++index;
+    }
+    return true;
+}
+size_t filterList(char **input, size_t n, char **output, char *filter)
+{
+    size_t count = 0;
+    for (size_t i = 0; i < n; ++i)
+        if (match(input[i], filter) || !strcmp(input[i], ".."))
+            output[count++] = input[i];
+    return count;
 }

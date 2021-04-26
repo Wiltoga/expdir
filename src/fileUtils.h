@@ -10,9 +10,9 @@ void file_dirname(char *path, char *buffer);
 bool file_isDir(char *path);
 bool file_isLink(char *path);
 void simplifyString(char *str, char *buffer);
-size_t listScore(char **list, size_t listSize, char *keyHistory);
 bool stringStartWith(char *str, char *start);
 void file_combine(char *dest, char *src);
 void file_sort(char **list, size_t listSize);
+size_t filterList(char **input, size_t n, char **output, char *filter);
 
 #endif
