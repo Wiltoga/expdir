@@ -511,8 +511,6 @@ size_t displayFile(char *buffer, char *fileName, bool useEmojis, bool reverse, b
         buffer += string_formatForeground(buffer, FILE_COLOR);
         buffer += sizeof(char) * sprintf(buffer, FULL_SEPARATOR);
     }
-    else
-        buffer += sizeof(char) * sprintf(buffer, "  ");
     if (hacky)
     {
         struct winsize w;
