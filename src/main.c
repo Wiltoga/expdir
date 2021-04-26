@@ -224,6 +224,16 @@ options :\n\
         }
         size_t filteredFoldersCount = filterList(folders, foldersCount, filteredFolders, searchHistory);
         size_t filteredFilesCount = filterList(files, filesCount, filteredFiles, searchHistory);
+        for (size_t i = 0; i < filteredFoldersCount; ++i)
+        {
+            char simplified[128];
+            simplifyString(filteredFolders[i], simplified);
+            if (stringStartWith(simplified, searchHistory))
+            {
+                selection = i;
+                break;
+            }
+        }
         if (selection >= filteredFoldersCount)
             selection = filteredFoldersCount != 1 ? 1 : 0;
         pagesCount = (filteredFoldersCount + filteredFilesCount) / MAX_LINES_PER_PAGE;
@@ -452,7 +462,7 @@ options :\n\
                 original[0] = key;
                 simplifyString(original, simple);
                 key = simple[0];
-                if (key >= 'a' && key <= 'z')
+                if ((key >= 'a' && key <= 'z') || (key >= '0' && key <= '9'))
                 {
                     size_t historyLen = strlen(searchHistory);
                     if (historyLen < MAX_SEARCH_LENGTH)
