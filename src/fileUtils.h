@@ -14,5 +14,6 @@ bool stringStartWith(char *str, char *start);
 void file_combine(char *dest, char *src);
 void file_sort(char **list, size_t listSize);
 size_t filterList(char **input, size_t n, char **output, char *filter);
+bool anyEntry(char **list, size_t n);
 
 #endif

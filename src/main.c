@@ -236,8 +236,8 @@ options :\n\
                 break;
             }
         }
-        if (selection >= filteredFoldersCount || selection == 0)
-            selection = filteredFoldersCount != 1 ? 1 : 0;
+        if (selection >= filteredFoldersCount || !strcmp(filteredFolders[selection], ".."))
+            selection = anyEntry(filteredFolders, filteredFoldersCount) ? 1 : 0;
         pagesCount = (filteredFoldersCount + filteredFilesCount) / MAX_LINES_PER_PAGE;
         if ((filteredFoldersCount + filteredFilesCount) % MAX_LINES_PER_PAGE)
             pagesCount++;
@@ -265,7 +265,7 @@ options :\n\
             console_buffer += string_setCursorPosition(console_buffer, 15, 2);
             console_buffer += string_formatColor(console_buffer, SYSTEM_COLOR_BLACK, SYSTEM_COLOR_WHITE);
             console_buffer += sprintf(console_buffer, " %s", useEmojis ? SEARCH " " : "Search:");
-            console_buffer += string_formatColor(console_buffer, searchHistory[0] == '\0' || filteredFoldersCount != 1 ? SYSTEM_COLOR_GREEN : SYSTEM_COLOR_RED, SYSTEM_COLOR_WHITE);
+            console_buffer += string_formatColor(console_buffer, searchHistory[0] == '\0' || anyEntry(filteredFolders, filteredFoldersCount) ? SYSTEM_COLOR_GREEN : SYSTEM_COLOR_RED, SYSTEM_COLOR_WHITE);
             console_buffer += string_formatMode(console_buffer, CONSOLE_FLAG_UNDERLINE);
             console_buffer += sprintf(console_buffer, "%s", searchHistory);
             size_t searchLen = strlen(searchHistory);

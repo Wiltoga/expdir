@@ -227,3 +227,10 @@ size_t filterList(char **input, size_t n, char **output, char *filter)
             output[count++] = input[i];
     return count;
 }
+bool anyEntry(char **list, size_t n)
+{
+    for (int i = 0; i < n; ++i)
+        if (strcmp(list[i], ".."))
+            return true;
+    return false;
+}
