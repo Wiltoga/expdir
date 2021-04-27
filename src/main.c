@@ -104,13 +104,16 @@ void resize(int sig)
 
 int main(int argc, char **argv)
 {
+    //initialization
+    /***********************************************************************************/
     srand(time(NULL));
-    signal(SIGWINCH, resize);
+    signal(SIGWINCH, resize); //terminal resized event
     char *patterns[64];
     char *overrides[64];
-    char *paths[2] = {
-        "/etc/expdir/aliases"};
+    char *paths[2] = {//the paths to config files
+                      "/etc/expdir/aliases"};
     {
+        //we add the config file in the home folder
         paths[1] = (char *)malloc(256 * sizeof(char));
         void *ptr = paths[1];
         ptr += sizeof(char) * sprintf(ptr, "%s", getenv("HOME"));
@@ -118,7 +121,7 @@ int main(int argc, char **argv)
         *(char *)ptr = '\0';
     }
     int patternCount = parseAliases(paths, 2, patterns, overrides);
-    switch (patternCount)
+    switch (patternCount) //errors handling
     {
     case -1:
         printf("ERROR:Missing '=' in the same line in aliases.\n");
@@ -136,10 +139,10 @@ int main(int argc, char **argv)
         printf("ERROR:Unknown environment variable.\n");
         return -4;
     }
-    char *base_buffer = (char *)malloc(256 * sizeof(char));
-    char *__dir__ = (char *)malloc(256 * sizeof(char));
+    char *base_buffer = (char *)malloc(256 * sizeof(char)); //buffer used for temporary stuff
+    char *__dir__ = (char *)malloc(256 * sizeof(char));     //current directory
     char *dir = __dir__;
-    int __max_lines__;
+    int __max_lines__; //max lines of files displayed per page
     strcpy(dir, getenv("PWD"));
     {
         size_t dirLen = strlen(dir);
@@ -150,9 +153,11 @@ int main(int argc, char **argv)
     bool displayFiles = false;
     bool useEmojis = false;
     bool showHelp = false;
+
+    // args parsing
     for (int i = 1; i < argc; ++i)
     {
-        if (argv[i][0] == '-' && argv[i][1] != '-')
+        if (argv[i][0] == '-' && argv[i][1] != '-') // args starting with a single '-'
         {
             size_t s = strlen(argv[i]);
             for (int j = 1; j < s; ++j)
@@ -180,7 +185,7 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--help"))
             showHelp = true;
         else
-        {
+        { // no special arg, the starting directory
             if (*argv[i] != '/')
                 file_combine(dir, argv[i]);
             else
@@ -208,6 +213,7 @@ options :\n\
             return 0;
         }
     }
+    // ncurses initialization
     setlocale(LC_ALL, "");
     initscr();
     keypad(stdscr, TRUE);
@@ -217,8 +223,7 @@ options :\n\
     scrollok(stdscr, TRUE);
     mousemask(ALL_MOUSE_EVENTS, NULL);
     mouseinterval(0);
-    bool colors = has_colors();
-    if (colors)
+    if (has_colors())
     {
         use_default_colors();
         start_color();
@@ -248,29 +253,39 @@ options :\n\
         init_pair(INVALID_SEARCH_COLOR, COLOR_RED, COLOR_WHITE);
         init_pair(NEUTRAL_SEARCH_REVERSE_COLOR, COLOR_WHITE, -1);
     }
+    else
+    {
+        endwin();
+        printf("Err : No color support.");
+        exit(100);
+    }
+    //we move the the dir of the program
     file_dirname(*argv, base_buffer);
     chdir(base_buffer);
-    bool fullRefresh = true;
-    bool validate = false;
-    char **folders = (char **)malloc(1024 * sizeof(char));
-    char **filteredFolders = (char **)malloc(1024 * sizeof(char));
+    bool fullRefresh = true;                                       //parse the directory
+    bool validate = false;                                         //end the program
+    char **folders = (char **)malloc(1024 * sizeof(char));         //null terminated list of all folders
+    char **filteredFolders = (char **)malloc(1024 * sizeof(char)); //null terminated list of all folders, after filter
     folders[0] = NULL;
     size_t foldersCount = 0;
-    char **files = (char **)malloc(1024 * sizeof(char));
-    char **filteredFiles = (char **)malloc(1024 * sizeof(char));
-    box_t hitboxes[MAX_HITBOXES];
+    char **files = (char **)malloc(1024 * sizeof(char));         //null terminated list of all files
+    char **filteredFiles = (char **)malloc(1024 * sizeof(char)); //null terminated list of all files, after filter
     files[0] = NULL;
     size_t filesCount = 0;
-    int selection;
-    int page;
-    int pagesCount;
-    char searchHistory[MAX_SEARCH_LENGTH + 1];
-    bool searchChanged = false;
+    box_t hitboxes[MAX_HITBOXES];              //list of hitboxes for the mouse (the hitboxes of the entries)
+    int selection;                             //currently selection entry
+    int page;                                  //current page
+    int pagesCount;                            //total pages
+    char searchHistory[MAX_SEARCH_LENGTH + 1]; //search bar content
+    bool searchChanged = false;                //true when the seachbar has changed
+
+    //main loop
+    /****************************************************************************/
     while (!validate)
     {
         if (fullRefresh)
         {
-            searchHistory[0] = '\0';
+            searchHistory[0] = '\0'; //we reset the searchbar
             searchChanged = true;
             fullRefresh = false;
             for (int i = 0; i < filesCount; ++i)
@@ -307,11 +322,12 @@ options :\n\
             file_sort(folders, foldersCount);
             file_sort(files, filesCount);
         }
-        __max_lines__ = LINES - 3;
+        __max_lines__ = LINES - 3; //3 lines are occupied by the UI
         size_t filteredFoldersCount = filterList(folders, foldersCount, filteredFolders, searchHistory);
         size_t filteredFilesCount = filterList(files, filesCount, filteredFiles, searchHistory);
         if (searchChanged)
         {
+            //smart search
             for (size_t i = 0; i < filteredFoldersCount; ++i)
             {
                 char simplified[128];
@@ -328,7 +344,7 @@ options :\n\
         }
         pagesCount = (filteredFoldersCount + filteredFilesCount) / MAX_LINES_PER_PAGE;
         if ((filteredFoldersCount + filteredFilesCount) % MAX_LINES_PER_PAGE)
-            pagesCount++;
+            pagesCount++; //one more page for the leftovers
         if (selection == -1)
             selection = !strcmp(filteredFolders[0], "..") && filteredFoldersCount > 1 ? 1 : 0;
         page = selection / MAX_LINES_PER_PAGE;
@@ -375,7 +391,7 @@ options :\n\
             attroff(COLOR_PAIR(NEUTRAL_SEARCH_REVERSE_COLOR));
         }
         clrtoeol();
-        int displayedCount = pagesCount == 0 ? 0 : (page + 1 == pagesCount) ? (filteredFoldersCount + filteredFilesCount) : MAX_LINES_PER_PAGE;
+        int displayedCount = pagesCount == 0 ? 0 : (page + 1 == pagesCount) ? (filteredFoldersCount + filteredFilesCount) : MAX_LINES_PER_PAGE; //only god knows this
         if (displayedCount > MAX_LINES_PER_PAGE)
             displayedCount %= MAX_LINES_PER_PAGE;
         if (displayedCount > 0)
@@ -432,6 +448,8 @@ options :\n\
         int mouseClickedSelection = -1;
         while (!refreshUI)
         {
+            //smaller loop, for the cursor moving without changing page/dir
+            /*****************************************************************************/
             if (cursorMoved)
             {
                 if (filteredFoldersCount + filteredFilesCount > 0)
