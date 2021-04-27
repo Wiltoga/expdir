@@ -37,8 +37,6 @@
 #define TARGET_COLOR 10
 #define INVALID_COLOR 11
 #define INVALID_REVERSE_COLOR 12
-#define HACKY_COLOR 13
-#define HACKY_REVERSE_COLOR 14
 #define NEUTRAL_SEARCH_COLOR 15
 #define VALID_SEARCH_COLOR 16
 #define INVALID_SEARCH_COLOR 17
@@ -66,8 +64,8 @@ typedef struct
 
 void replaceStartingString(void *dest, char *src, char *pattern, char *override);
 void applyAliases(void *dest, char *src, char **patterns, char **overrides, size_t count);
-void displayFolder(char *folderName, char *dir, bool useEmojis, char **patterns, char **overrides, size_t patternCount, bool reverse, bool hacky);
-void displayFile(char *fileName, bool useEmojis, bool reverse, bool hacky);
+void displayFolder(char *folderName, char *dir, bool useEmojis, char **patterns, char **overrides, size_t patternCount, bool reverse);
+void displayFile(char *fileName, bool useEmojis, bool reverse);
 void emojify(char *src);
 void fillLineBinary(int count);
 
@@ -152,8 +150,6 @@ int main(int argc, char **argv)
     bool displayFiles = false;
     bool useEmojis = false;
     bool showHelp = false;
-    bool hackerMode = false;
-    int konamiCounter = 0;
     for (int i = 1; i < argc; ++i)
     {
         if (argv[i][0] == '-' && argv[i][1] != '-')
@@ -247,8 +243,6 @@ options :\n\
         init_pair(LINK_REVERSE_COLOR, COLOR_BLACK, COLOR_CYAN);
         init_pair(INVALID_COLOR, COLOR_RED, -1);
         init_pair(INVALID_REVERSE_COLOR, COLOR_WHITE, COLOR_RED);
-        init_pair(HACKY_COLOR, COLOR_GREEN, COLOR_BLACK);
-        init_pair(HACKY_REVERSE_COLOR, COLOR_BLACK, COLOR_GREEN);
         init_pair(NEUTRAL_SEARCH_COLOR, COLOR_BLACK, COLOR_WHITE);
         init_pair(VALID_SEARCH_COLOR, COLOR_GREEN, COLOR_WHITE);
         init_pair(INVALID_SEARCH_COLOR, COLOR_RED, COLOR_WHITE);
@@ -338,141 +332,100 @@ options :\n\
         if (selection == -1)
             selection = !strcmp(filteredFolders[0], "..") && filteredFoldersCount > 1 ? 1 : 0;
         page = selection / MAX_LINES_PER_PAGE;
-        if (!hackerMode)
+        move(0, 0);
+        printw("Current directory : ");
         {
-            move(0, 0);
-            printw("Current directory : ");
-            {
-                char __tmp[256];
-                applyAliases(__tmp, dir, patterns, overrides, patternCount);
-                if (useEmojis)
-                    emojify(__tmp);
-                else
-                {
-                    attron(COLOR_PAIR(DIRECTORY_BACK_COLOR));
-                    printw("%s", __tmp);
-                    attroff(COLOR_PAIR(DIRECTORY_BACK_COLOR));
-                }
-            }
-            clrtoeol();
-            move(1, 0);
-            attron(A_UNDERLINE);
-            printw("Page %d/%d            ", page + 1, pagesCount);
-            attroff(A_UNDERLINE);
-            move(1, 14);
-            attron(COLOR_PAIR(NEUTRAL_SEARCH_COLOR));
-            printw(" %s", useEmojis ? SEARCH " " : "Search:");
-            attroff(COLOR_PAIR(NEUTRAL_SEARCH_COLOR));
-            int searchColor = searchHistory[0] == '\0' || anyEntry(filteredFolders, filteredFoldersCount) ? VALID_SEARCH_COLOR : INVALID_SEARCH_COLOR;
-            attron(COLOR_PAIR(searchColor));
-            attron(A_UNDERLINE);
-            printw("%s", searchHistory);
-            size_t searchLen = strlen(searchHistory);
-            if (searchLen < MIN_SEARCH_BAR_LENGTH)
-                for (int i = searchLen; i < MIN_SEARCH_BAR_LENGTH; ++i)
-                    printw(" ");
-            attroff(A_UNDERLINE);
-            attroff(COLOR_PAIR(searchColor));
-            attron(COLOR_PAIR(NEUTRAL_SEARCH_COLOR));
-            printw(" ");
-            attroff(COLOR_PAIR(NEUTRAL_SEARCH_COLOR));
+            char __tmp[256];
+            applyAliases(__tmp, dir, patterns, overrides, patternCount);
             if (useEmojis)
+                emojify(__tmp);
+            else
             {
-                attron(COLOR_PAIR(NEUTRAL_SEARCH_REVERSE_COLOR));
-                printw(FULL_SEPARATOR);
-                attroff(COLOR_PAIR(NEUTRAL_SEARCH_REVERSE_COLOR));
-            }
-            clrtoeol();
-            int displayedCount = pagesCount == 0 ? 0 : (page + 1 == pagesCount) ? (filteredFoldersCount + filteredFilesCount) : MAX_LINES_PER_PAGE;
-            if (displayedCount > MAX_LINES_PER_PAGE)
-                displayedCount %= MAX_LINES_PER_PAGE;
-            if (displayedCount > 0)
-                for (int i = page * MAX_LINES_PER_PAGE; i < page * MAX_LINES_PER_PAGE + displayedCount; ++i)
-                {
-                    move(2 + i - page * MAX_LINES_PER_PAGE, 0);
-                    box_t *hitbox = &hitboxes[i - page * MAX_LINES_PER_PAGE];
-                    hitbox->value = i;
-                    if (i < filteredFoldersCount)
-                    {
-                        displayFolder(filteredFolders[i], dir, useEmojis, patterns, overrides, patternCount, false, false);
-                        hitbox->width = (useEmojis ? 4 : 0) + strlen(filteredFolders[i]);
-                    }
-                    else
-                    {
-                        displayFile(filteredFiles[i - filteredFoldersCount], useEmojis, false, false);
-                        hitbox->width = (useEmojis ? 4 : 0) + strlen(filteredFiles[i - filteredFoldersCount]);
-                    }
-                    clrtoeol();
-                }
-            for (int i = displayedCount; i < MAX_LINES_PER_PAGE; ++i)
-            {
-                move(2 + i, 0);
-                clrtoeol();
-            }
-            for (int i = displayedCount; i < MAX_HITBOXES; ++i)
-                hitboxes[i].value = -1;
-            move(2 + MAX_LINES_PER_PAGE, 1);
-            attron(COLOR_PAIR(DIRECTORY_BACK_COLOR));
-            printw("Space");
-            attroff(COLOR_PAIR(DIRECTORY_BACK_COLOR));
-            printw(":Open  ");
-            attron(COLOR_PAIR(DIRECTORY_BACK_COLOR));
-            printw("^X");
-            attroff(COLOR_PAIR(DIRECTORY_BACK_COLOR));
-            printw(":Cancel  ");
-            attron(COLOR_PAIR(DIRECTORY_BACK_COLOR));
-            printw("F5");
-            attroff(COLOR_PAIR(DIRECTORY_BACK_COLOR));
-            printw(":Refresh  ");
-            attron(COLOR_PAIR(DIRECTORY_BACK_COLOR));
-            printw("Tab");
-            attroff(COLOR_PAIR(DIRECTORY_BACK_COLOR));
-            printw(":");
-            if (!strcmp(dir, "/"))
-                attron(COLOR_PAIR(INVALID_COLOR));
-            printw("Parent");
-            if (!strcmp(dir, "/"))
-                attroff(COLOR_PAIR(INVALID_COLOR));
-            clrtoeol();
-        }
-        else
-        {
-            move(0, 0);
-            attron(COLOR_PAIR(HACKY_COLOR));
-            printw("Current directory : ");
-            {
-                char __tmp[256];
-                applyAliases(__tmp, dir, patterns, overrides, patternCount);
+                attron(COLOR_PAIR(DIRECTORY_BACK_COLOR));
                 printw("%s", __tmp);
+                attroff(COLOR_PAIR(DIRECTORY_BACK_COLOR));
             }
-            clrtoeol();
-            move(1, 0);
-            printw("Page %d/%d", page + 1, pagesCount);
-            clrtoeol();
-            int displayedCount = (page + 1 == pagesCount) ? (filteredFoldersCount + filteredFilesCount) : MAX_LINES_PER_PAGE;
-            if (displayedCount > MAX_LINES_PER_PAGE)
-                displayedCount %= MAX_LINES_PER_PAGE;
+        }
+        clrtoeol();
+        move(1, 0);
+        attron(A_UNDERLINE);
+        printw("Page %d/%d            ", page + 1, pagesCount);
+        attroff(A_UNDERLINE);
+        move(1, 14);
+        attron(COLOR_PAIR(NEUTRAL_SEARCH_COLOR));
+        printw(" %s", useEmojis ? SEARCH " " : "Search:");
+        attroff(COLOR_PAIR(NEUTRAL_SEARCH_COLOR));
+        int searchColor = searchHistory[0] == '\0' || anyEntry(filteredFolders, filteredFoldersCount) ? VALID_SEARCH_COLOR : INVALID_SEARCH_COLOR;
+        attron(COLOR_PAIR(searchColor));
+        attron(A_UNDERLINE);
+        printw("%s", searchHistory);
+        size_t searchLen = strlen(searchHistory);
+        if (searchLen < MIN_SEARCH_BAR_LENGTH)
+            for (int i = searchLen; i < MIN_SEARCH_BAR_LENGTH; ++i)
+                printw(" ");
+        attroff(A_UNDERLINE);
+        attroff(COLOR_PAIR(searchColor));
+        attron(COLOR_PAIR(NEUTRAL_SEARCH_COLOR));
+        printw(" ");
+        attroff(COLOR_PAIR(NEUTRAL_SEARCH_COLOR));
+        if (useEmojis)
+        {
+            attron(COLOR_PAIR(NEUTRAL_SEARCH_REVERSE_COLOR));
+            printw(FULL_SEPARATOR);
+            attroff(COLOR_PAIR(NEUTRAL_SEARCH_REVERSE_COLOR));
+        }
+        clrtoeol();
+        int displayedCount = pagesCount == 0 ? 0 : (page + 1 == pagesCount) ? (filteredFoldersCount + filteredFilesCount) : MAX_LINES_PER_PAGE;
+        if (displayedCount > MAX_LINES_PER_PAGE)
+            displayedCount %= MAX_LINES_PER_PAGE;
+        if (displayedCount > 0)
             for (int i = page * MAX_LINES_PER_PAGE; i < page * MAX_LINES_PER_PAGE + displayedCount; ++i)
             {
                 move(2 + i - page * MAX_LINES_PER_PAGE, 0);
+                box_t *hitbox = &hitboxes[i - page * MAX_LINES_PER_PAGE];
+                hitbox->value = i;
                 if (i < filteredFoldersCount)
-                    displayFolder(filteredFolders[i], dir, false, patterns, overrides, patternCount, false, true);
+                {
+                    displayFolder(filteredFolders[i], dir, useEmojis, patterns, overrides, patternCount, false);
+                    hitbox->width = (useEmojis ? 4 : 0) + strlen(filteredFolders[i]);
+                }
                 else
-                    displayFile(filteredFiles[i - filteredFoldersCount], false, false, true);
+                {
+                    displayFile(filteredFiles[i - filteredFoldersCount], useEmojis, false);
+                    hitbox->width = (useEmojis ? 4 : 0) + strlen(filteredFiles[i - filteredFoldersCount]);
+                }
                 clrtoeol();
             }
-            for (int i = displayedCount; i < MAX_LINES_PER_PAGE; ++i)
-            {
-                move(2 + i, 0);
-                clrtoeol();
-            }
-            attron(COLOR_PAIR(HACKY_COLOR));
-            for (int i = displayedCount; i < MAX_LINES_PER_PAGE + 1; ++i)
-            {
-                move(2 + i, 0);
-                clrtoeol();
-            }
+        for (int i = displayedCount; i < MAX_LINES_PER_PAGE; ++i)
+        {
+            move(2 + i, 0);
+            clrtoeol();
         }
+        for (int i = displayedCount; i < MAX_HITBOXES; ++i)
+            hitboxes[i].value = -1;
+        move(2 + MAX_LINES_PER_PAGE, 1);
+        attron(COLOR_PAIR(DIRECTORY_BACK_COLOR));
+        printw("Space");
+        attroff(COLOR_PAIR(DIRECTORY_BACK_COLOR));
+        printw(":Open  ");
+        attron(COLOR_PAIR(DIRECTORY_BACK_COLOR));
+        printw("^X");
+        attroff(COLOR_PAIR(DIRECTORY_BACK_COLOR));
+        printw(":Cancel  ");
+        attron(COLOR_PAIR(DIRECTORY_BACK_COLOR));
+        printw("F5");
+        attroff(COLOR_PAIR(DIRECTORY_BACK_COLOR));
+        printw(":Refresh  ");
+        attron(COLOR_PAIR(DIRECTORY_BACK_COLOR));
+        printw("Tab");
+        attroff(COLOR_PAIR(DIRECTORY_BACK_COLOR));
+        printw(":");
+        if (!strcmp(dir, "/"))
+            attron(COLOR_PAIR(INVALID_COLOR));
+        printw("Parent");
+        if (!strcmp(dir, "/"))
+            attroff(COLOR_PAIR(INVALID_COLOR));
+        clrtoeol();
         refreshUI = false;
         cursorMoved = true;
         int oldSelection = selection;
@@ -485,18 +438,18 @@ options :\n\
                 {
                     move(oldSelection - page * MAX_LINES_PER_PAGE + 2, 0);
                     if (oldSelection < filteredFoldersCount)
-                        displayFolder(filteredFolders[oldSelection], dir, !hackerMode && useEmojis, patterns, overrides, patternCount, false, hackerMode);
+                        displayFolder(filteredFolders[oldSelection], dir, useEmojis, patterns, overrides, patternCount, false);
                     else
-                        displayFile(filteredFiles[oldSelection - filteredFoldersCount], !hackerMode && useEmojis, false, hackerMode);
+                        displayFile(filteredFiles[oldSelection - filteredFoldersCount], useEmojis, false);
                     clrtoeol();
                 }
                 if (filteredFoldersCount + filteredFilesCount > 0)
                 {
                     move(selection - page * MAX_LINES_PER_PAGE + 2, 0);
                     if (selection < filteredFoldersCount)
-                        displayFolder(filteredFolders[selection], dir, !hackerMode && useEmojis, patterns, overrides, patternCount, true, hackerMode);
+                        displayFolder(filteredFolders[selection], dir, useEmojis, patterns, overrides, patternCount, true);
                     else
-                        displayFile(filteredFiles[selection - filteredFoldersCount], !hackerMode && useEmojis, true, hackerMode);
+                        displayFile(filteredFiles[selection - filteredFoldersCount], useEmojis, true);
                     clrtoeol();
                 }
                 move(LINES - 1, 0);
@@ -508,10 +461,6 @@ options :\n\
             int key = getch();
             if (key == UP_ARROW)
             {
-                if (konamiCounter == 0 || konamiCounter == 1)
-                    ++konamiCounter;
-                else
-                    konamiCounter = 0;
                 if (selection > 0)
                     selection--;
                 if (selection % MAX_LINES_PER_PAGE == MAX_LINES_PER_PAGE - 1)
@@ -520,10 +469,6 @@ options :\n\
             }
             else if (key == DOWN_ARROW)
             {
-                if (konamiCounter == 2 || konamiCounter == 3)
-                    ++konamiCounter;
-                else
-                    konamiCounter = 0;
                 if (selection < filteredFoldersCount + filteredFilesCount - 1)
                     selection++;
                 if (selection % MAX_LINES_PER_PAGE == 0)
@@ -532,10 +477,6 @@ options :\n\
             }
             else if (key == LEFT_ARROW)
             {
-                if (konamiCounter == 4 || konamiCounter == 6)
-                    ++konamiCounter;
-                else
-                    konamiCounter = 0;
                 if (page > 0)
                 {
                     selection -= MAX_LINES_PER_PAGE;
@@ -545,10 +486,6 @@ options :\n\
             }
             else if (key == RIGHT_ARROW)
             {
-                if (konamiCounter == 5 || konamiCounter == 7)
-                    ++konamiCounter;
-                else
-                    konamiCounter = 0;
                 if (page < pagesCount - 1)
                 {
                     selection += MAX_LINES_PER_PAGE;
@@ -560,7 +497,6 @@ options :\n\
             }
             else if ((key == RETURN_KEY && selection < filteredFoldersCount) || (key == TAB_KEY && !strcmp(folders[0], "..")))
             {
-                konamiCounter = 0;
                 char __fullDir[256];
                 strcpy(__fullDir, dir);
                 file_combine(__fullDir, selection < filteredFoldersCount ? filteredFolders[selection] : "..");
@@ -581,7 +517,6 @@ options :\n\
             }
             else if (key == SPACE_KEY)
             {
-                konamiCounter = 0;
                 refreshUI = true;
                 validate = true;
                 FILE *f = fopen("/var/cache/expdir/location", "w");
@@ -591,19 +526,16 @@ options :\n\
             }
             else if (key == CTRL_X)
             {
-                konamiCounter = 0;
                 refreshUI = true;
                 validate = true;
             }
             else if (key == F5)
             {
-                konamiCounter = 0;
                 refreshUI = true;
                 fullRefresh = true;
             }
             else if (key == BACKSPACE)
             {
-                konamiCounter = 0;
                 size_t historyLen = strlen(searchHistory);
                 if (historyLen > 0)
                 {
@@ -614,7 +546,6 @@ options :\n\
             }
             else if (key == CTRL_BACKSPACE)
             {
-                konamiCounter = 0;
                 searchHistory[0] = '\0';
                 refreshUI = true;
                 searchChanged = true;
@@ -691,15 +622,6 @@ options :\n\
             }
             else
             {
-                if (konamiCounter == 8 && key == 'b')
-                    ++konamiCounter;
-                else if (konamiCounter == 9 && key == 'a')
-                {
-                    hackerMode = !hackerMode;
-                    refreshUI = true;
-                }
-                else
-                    konamiCounter = 0;
                 char original[2] = " ", simple[2];
                 original[0] = key;
                 simplifyString(original, simple);
@@ -765,22 +687,10 @@ void replaceStartingString(void *dest, char *src, char *pattern, char *override)
     strcpy(dest, src);
 }
 
-void displayFile(char *fileName, bool useEmojis, bool reverse, bool hacky)
+void displayFile(char *fileName, bool useEmojis, bool reverse)
 {
-    char hackyBuffer[256] = "0b";
-    if (hacky)
-    {
-        int len = strlen(fileName);
-        int nbCorruption = rand() % (1 + len / 3);
-        strcpy((char *)hackyBuffer + 2, fileName);
-        fileName = hackyBuffer;
-        for (int i = 0; i < nbCorruption; ++i)
-            hackyBuffer[2 + (rand() % len)] = '0' + (rand() % 2);
-    }
-    int fileColor = reverse ? hacky ? HACKY_REVERSE_COLOR
-                                    : FILE_REVERSE_COLOR
-                            : hacky ? HACKY_COLOR
-                                    : FILE_COLOR;
+    int fileColor = reverse ? FILE_REVERSE_COLOR
+                            : FILE_COLOR;
     attron(COLOR_PAIR(fileColor));
     if (useEmojis)
         printw(FILE_ICON);
@@ -793,34 +703,17 @@ void displayFile(char *fileName, bool useEmojis, bool reverse, bool hacky)
         printw(FULL_SEPARATOR);
         attroff(COLOR_PAIR(FILE_COLOR));
     }
-
-    else if (hacky)
-    {
-        fillLineBinary(COLS - 2 - strlen(fileName));
-        attroff(COLOR_PAIR(fileColor));
-    }
     else
         attroff(COLOR_PAIR(fileColor));
-    if (!hacky)
-        clrtoeol();
+    clrtoeol();
 }
 
-void displayFolder(char *folderName, char *dir, bool useEmojis, char **patterns, char **overrides, size_t patternCount, bool reverse, bool hacky)
+void displayFolder(char *folderName, char *dir, bool useEmojis, char **patterns, char **overrides, size_t patternCount, bool reverse)
 {
     char __fullDir[256];
     strcpy(__fullDir, dir);
     file_combine(__fullDir, folderName);
-    char hackyBuffer[256] = "0x";
-    if (hacky)
-    {
-        int len = strlen(folderName);
-        int nbCorruption = rand() % (1 + len / 3);
-        strcpy((char *)hackyBuffer + 2, folderName);
-        folderName = hackyBuffer;
-        for (int i = 0; i < nbCorruption; ++i)
-            hackyBuffer[2 + (rand() % len)] = '0' + (rand() % 2);
-    }
-    if (file_isLink(__fullDir) && !hacky)
+    if (file_isLink(__fullDir))
     {
         int linkColor = reverse ? LINK_REVERSE_COLOR : LINK_COLOR;
         attron(COLOR_PAIR(linkColor));
@@ -859,20 +752,18 @@ void displayFolder(char *folderName, char *dir, bool useEmojis, char **patterns,
     }
     else
     {
-        int folderColor = reverse ? hacky ? HACKY_REVERSE_COLOR
-                                          : !access(__fullDir, R_OK) ? FOLDER_REVERSE_COLOR
-                                                                     : INVALID_REVERSE_COLOR
-                                  : hacky ? HACKY_COLOR
-                                          : !access(__fullDir, R_OK) ? FOLDER_COLOR
-                                                                     : INVALID_COLOR;
+        int folderColor = reverse ? !access(__fullDir, R_OK) ? FOLDER_REVERSE_COLOR
+                                                             : INVALID_REVERSE_COLOR
+                                  : !access(__fullDir, R_OK) ? FOLDER_COLOR
+                                                             : INVALID_COLOR;
         attron(COLOR_PAIR(folderColor));
         if (useEmojis)
             printw("%s", strcmp(folderName, "..") ? !access(__fullDir, R_OK) ? FOLDER_ICON : INVALID_ICON : PARENT_ICON);
         printw("%s", folderName);
-        if (!useEmojis && !hacky)
+        if (!useEmojis)
         {
             printw("/");
-            attron(COLOR_PAIR(folderColor));
+            attroff(COLOR_PAIR(folderColor));
         }
         else if (useEmojis && reverse)
         {
@@ -884,19 +775,9 @@ void displayFolder(char *folderName, char *dir, bool useEmojis, char **patterns,
             attroff(COLOR_PAIR(folderColor));
         }
         else
-        {
-            printw("  ");
             attroff(COLOR_PAIR(folderColor));
-        }
     }
-    if (hacky)
-    {
-        attron(COLOR_PAIR(HACKY_COLOR));
-        fillLineBinary(COLS - 2 - strlen(folderName));
-        attroff(COLOR_PAIR(HACKY_COLOR));
-    }
-    else
-        clrtoeol();
+    clrtoeol();
 }
 
 void emojify(char *src)
