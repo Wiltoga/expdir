@@ -27,8 +27,8 @@ Commands :
 - `Ctrl+X` : Stop the application, do not move to directory.
 - `F5` : Refresh the directory.
 - `Tab` : Go back to the parent of the current folder.
-- <arrow key> : move up/down or change page (left/right)
-- <any letter> : search for a specific folder.
+- arrow key : move up/down or change page (left/right)
+- any letter : search for a specific folder.
 
 #### Custom aliases
 
