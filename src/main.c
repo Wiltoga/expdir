@@ -327,9 +327,9 @@ options :\n\
         if (selection == -1)
             selection = !strcmp(filteredFolders[0], "..") && filteredFoldersCount > 1 ? 1 : 0;
         page = selection / MAX_LINES_PER_PAGE;
-        clear();
         if (!hackerMode)
         {
+            move(0, 0);
             printw("Current directory : ");
             {
                 char __tmp[256];
@@ -343,6 +343,7 @@ options :\n\
                     attroff(COLOR_PAIR(DIRECTORY_BACK_COLOR));
                 }
             }
+            clrtoeol();
             move(1, 0);
             attron(A_UNDERLINE);
             printw("Page %d/%d            ", page + 1, pagesCount);
@@ -370,6 +371,7 @@ options :\n\
                 printw(FULL_SEPARATOR);
                 attroff(COLOR_PAIR(NEUTRAL_SEARCH_REVERSE_COLOR));
             }
+            clrtoeol();
             int displayedCount = pagesCount == 0 ? 0 : (page + 1 == pagesCount) ? (filteredFoldersCount + filteredFilesCount) : MAX_LINES_PER_PAGE;
             if (displayedCount > MAX_LINES_PER_PAGE)
                 displayedCount %= MAX_LINES_PER_PAGE;
@@ -381,7 +383,13 @@ options :\n\
                         displayFolder(filteredFolders[i], dir, useEmojis, patterns, overrides, patternCount, false, false);
                     else
                         displayFile(filteredFiles[i - filteredFoldersCount], useEmojis, false, false);
+                    clrtoeol();
                 }
+            for (int i = displayedCount; i < MAX_LINES_PER_PAGE; ++i)
+            {
+                move(2 + i, 0);
+                clrtoeol();
+            }
             move(2 + MAX_LINES_PER_PAGE, 1);
             attron(COLOR_PAIR(DIRECTORY_BACK_COLOR));
             printw("Space");
@@ -404,9 +412,11 @@ options :\n\
             printw("Parent");
             if (!strcmp(dir, "/"))
                 attroff(COLOR_PAIR(INVALID_COLOR));
+            clrtoeol();
         }
         else
         {
+            move(0, 0);
             attron(COLOR_PAIR(HACKY_COLOR));
             printw("Current directory : ");
             {
@@ -428,6 +438,12 @@ options :\n\
                     displayFolder(filteredFolders[i], dir, false, patterns, overrides, patternCount, false, true);
                 else
                     displayFile(filteredFiles[i - filteredFoldersCount], false, false, true);
+                clrtoeol();
+            }
+            for (int i = displayedCount; i < MAX_LINES_PER_PAGE; ++i)
+            {
+                move(2 + i, 0);
+                clrtoeol();
             }
             attron(COLOR_PAIR(HACKY_COLOR));
             for (int i = displayedCount; i < MAX_LINES_PER_PAGE + 1; ++i)
@@ -450,6 +466,7 @@ options :\n\
                         displayFolder(filteredFolders[oldSelection], dir, !hackerMode && useEmojis, patterns, overrides, patternCount, false, hackerMode);
                     else
                         displayFile(filteredFiles[oldSelection - filteredFoldersCount], !hackerMode && useEmojis, false, hackerMode);
+                    clrtoeol();
                 }
                 if (filteredFoldersCount + filteredFilesCount > 0)
                 {
@@ -458,6 +475,7 @@ options :\n\
                         displayFolder(filteredFolders[selection], dir, !hackerMode && useEmojis, patterns, overrides, patternCount, true, hackerMode);
                     else
                         displayFile(filteredFiles[selection - filteredFoldersCount], !hackerMode && useEmojis, true, hackerMode);
+                    clrtoeol();
                 }
                 move(LINES - 1, 0);
                 refresh();
