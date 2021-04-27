@@ -4,17 +4,17 @@
 
 here is an example of what it looks like :
 
-![preview](https://user-images.githubusercontent.com/30344403/116106735-ace4d700-a6b2-11eb-9a63-45c26be16fdf.png)
+![image](https://user-images.githubusercontent.com/30344403/116304648-17754000-a7a3-11eb-8e75-460e884dc058.png)
 
 You can control the cursor using the arrow keys and validate the directory using the space key.
 
 It is also possible to search for a specific folder using :
 
-![search example](https://user-images.githubusercontent.com/30344403/116106953-ddc50c00-a6b2-11eb-8cea-bd1c4b9bf857.png)
+![image](https://user-images.githubusercontent.com/30344403/116304921-5d320880-a7a3-11eb-98f1-a84f3e33320a.png)
 
 It is also available without fancy visuals for the most common terminals :
 
-![preview without fancy stuff](https://user-images.githubusercontent.com/30344403/116107155-11079b00-a6b3-11eb-965b-09123ce7a168.png)
+![image](https://user-images.githubusercontent.com/30344403/116305013-776be680-a7a3-11eb-84e5-23e14e37eb2e.png)
 
 It also reacts to mouse clicks for the heretics out there.
 
