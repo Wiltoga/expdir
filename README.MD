@@ -16,6 +16,7 @@ It is also available without fancy visuals for the most common terminals :
 
 ![preview without fancy stuff](https://user-images.githubusercontent.com/30344403/116107155-11079b00-a6b3-11eb-965b-09123ce7a168.png)
 
+It also reacts to mouse clicks for the heretics out there.
 
 ## Usage
 
@@ -24,8 +25,9 @@ Simply call `expdir` to start the explorer. You can still call `expdir --help` f
 Commands :
 - `Space` : Validate the directory go change the current working directory.
 - `Ctrl+X` : Stop the application, do not move to directory.
-- `Ctrl+R` : Refresh the directory.
+- `F5` : Refresh the directory.
 - `Tab` : Go back to the parent of the current folder.
+- <arrow key> : move up/down or change page (left/right)
 - <any letter> : search for a specific folder.
 
 #### Custom aliases
