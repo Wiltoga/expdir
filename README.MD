@@ -43,7 +43,7 @@ This will simply change the home folder of an user to `~`.
 ## Installation
 
 Go to the [latest release](https://github.com/WildGoat07/expdir/releases/latest) and follow the steps.
-After the intallation, you have to reboot for it to take effect.
+After the intallation, you have to source bash_profile again so you can use this. Creating a new terminal will quickly do the trick.
 
 ## Build
 
