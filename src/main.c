@@ -6,6 +6,8 @@
 #include <time.h>
 #include <ncurses.h>
 #include <locale.h>
+#include <errno.h>
+#include <signal.h>
 #include "fileUtils.h"
 #include "aliases.h"
 
@@ -62,9 +64,43 @@ void displayFile(char *fileName, bool useEmojis, bool reverse, bool hacky);
 void emojify(char *src);
 void fillLineBinary(int count);
 
+//https://stackoverflow.com/a/1157217
+int msleep(long msec)
+{
+    struct timespec ts;
+    int res;
+
+    if (msec < 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+
+    do
+    {
+        res = nanosleep(&ts, &ts);
+    } while (res && errno == EINTR);
+
+    return res;
+}
+
+static bool refreshUI;
+static bool cursorMoved;
+
+void resize(int sig)
+{
+    refreshUI = true;
+    endwin();
+    refresh();
+}
+
 int main(int argc, char **argv)
 {
     srand(time(NULL));
+    signal(SIGWINCH, resize);
     char *patterns[64];
     char *overrides[64];
     char *paths[2] = {
@@ -174,6 +210,7 @@ options :\n\
     keypad(stdscr, TRUE);
     cbreak();
     noecho();
+    nodelay(stdscr, TRUE);
     bool colors = has_colors();
     if (colors)
     {
@@ -399,29 +436,36 @@ options :\n\
                 clrtoeol();
             }
         }
-        bool refresh = false;
-        while (!refresh)
+        refreshUI = false;
+        cursorMoved = true;
+        int oldSelection = selection;
+        while (!refreshUI)
         {
-            move(selection - page * MAX_LINES_PER_PAGE + 2, 0);
-            if (filteredFoldersCount + filteredFilesCount > 0)
+            if (cursorMoved)
             {
-                if (selection < filteredFoldersCount)
-                    displayFolder(filteredFolders[selection], dir, !hackerMode && useEmojis, patterns, overrides, patternCount, true, hackerMode);
-                else
-                    displayFile(filteredFiles[selection - filteredFoldersCount], !hackerMode && useEmojis, true, hackerMode);
+                if (filteredFoldersCount + filteredFilesCount > 0)
+                {
+                    move(oldSelection - page * MAX_LINES_PER_PAGE + 2, 0);
+                    if (oldSelection < filteredFoldersCount)
+                        displayFolder(filteredFolders[oldSelection], dir, !hackerMode && useEmojis, patterns, overrides, patternCount, false, hackerMode);
+                    else
+                        displayFile(filteredFiles[oldSelection - filteredFoldersCount], !hackerMode && useEmojis, false, hackerMode);
+                }
+                if (filteredFoldersCount + filteredFilesCount > 0)
+                {
+                    move(selection - page * MAX_LINES_PER_PAGE + 2, 0);
+                    if (selection < filteredFoldersCount)
+                        displayFolder(filteredFolders[selection], dir, !hackerMode && useEmojis, patterns, overrides, patternCount, true, hackerMode);
+                    else
+                        displayFile(filteredFiles[selection - filteredFoldersCount], !hackerMode && useEmojis, true, hackerMode);
+                }
+                move(LINES - 1, 0);
+                refresh();
+                cursorMoved = false;
             }
-            move(LINES - 1, 0);
-            refresh();
+            if (selection + oldSelection)
+                oldSelection = selection;
             int key = getch();
-            move(selection - page * MAX_LINES_PER_PAGE + 2, 0);
-            if (filteredFoldersCount + filteredFilesCount > 0)
-            {
-                if (selection < filteredFoldersCount)
-                    displayFolder(filteredFolders[selection], dir, !hackerMode && useEmojis, patterns, overrides, patternCount, false, hackerMode);
-                else
-                    displayFile(filteredFiles[selection - filteredFoldersCount], !hackerMode && useEmojis, false, hackerMode);
-            }
-            move(MAX_LINES_PER_PAGE + 3, 0);
             if (key == UP_ARROW)
             {
                 if (konamiCounter == 0 || konamiCounter == 1)
@@ -431,7 +475,8 @@ options :\n\
                 if (selection > 0)
                     selection--;
                 if (selection % MAX_LINES_PER_PAGE == MAX_LINES_PER_PAGE - 1)
-                    refresh = true;
+                    refreshUI = true;
+                cursorMoved = true;
             }
             else if (key == DOWN_ARROW)
             {
@@ -442,7 +487,8 @@ options :\n\
                 if (selection < filteredFoldersCount + filteredFilesCount - 1)
                     selection++;
                 if (selection % MAX_LINES_PER_PAGE == 0)
-                    refresh = true;
+                    refreshUI = true;
+                cursorMoved = true;
             }
             else if (key == LEFT_ARROW)
             {
@@ -453,8 +499,9 @@ options :\n\
                 if (page > 0)
                 {
                     selection -= MAX_LINES_PER_PAGE;
-                    refresh = true;
+                    refreshUI = true;
                 }
+                cursorMoved = true;
             }
             else if (key == RIGHT_ARROW)
             {
@@ -467,8 +514,9 @@ options :\n\
                     selection += MAX_LINES_PER_PAGE;
                     if (selection > filteredFoldersCount + filteredFilesCount - 1)
                         selection = filteredFoldersCount + filteredFilesCount - 1;
-                    refresh = true;
+                    refreshUI = true;
                 }
+                cursorMoved = true;
             }
             else if ((key == RETURN_KEY && selection < filteredFoldersCount) || (key == TAB_KEY && !strcmp(folders[0], "..")))
             {
@@ -481,7 +529,7 @@ options :\n\
                     if (key == TAB_KEY)
                         selection = 0;
                     fullRefresh = true;
-                    refresh = true;
+                    refreshUI = true;
                     if (!strcmp(folders[0], ".."))
                     {
                         strcpy(base_buffer, dir);
@@ -494,7 +542,7 @@ options :\n\
             else if (key == SPACE_KEY)
             {
                 konamiCounter = 0;
-                refresh = true;
+                refreshUI = true;
                 validate = true;
                 FILE *f = fopen("/var/cache/expdir/location", "w");
                 fwrite(dir, sizeof(char) * strlen(dir), 1, f);
@@ -504,13 +552,13 @@ options :\n\
             else if (key == CTRL_X)
             {
                 konamiCounter = 0;
-                refresh = true;
+                refreshUI = true;
                 validate = true;
             }
             else if (key == F5)
             {
                 konamiCounter = 0;
-                refresh = true;
+                refreshUI = true;
                 fullRefresh = true;
             }
             else if (key == BACKSPACE)
@@ -520,7 +568,7 @@ options :\n\
                 if (historyLen > 0)
                 {
                     searchHistory[historyLen - 1] = '\0';
-                    refresh = true;
+                    refreshUI = true;
                     searchChanged = true;
                 }
             }
@@ -528,9 +576,11 @@ options :\n\
             {
                 konamiCounter = 0;
                 searchHistory[0] = '\0';
-                refresh = true;
+                refreshUI = true;
                 searchChanged = true;
             }
+            else if (key == ERR)
+                msleep(20);
             else
             {
                 if (konamiCounter == 8 && key == 'b')
@@ -538,7 +588,7 @@ options :\n\
                 else if (konamiCounter == 9 && key == 'a')
                 {
                     hackerMode = !hackerMode;
-                    refresh = true;
+                    refreshUI = true;
                 }
                 else
                     konamiCounter = 0;
@@ -553,7 +603,7 @@ options :\n\
                     {
                         searchHistory[historyLen] = key;
                         searchHistory[historyLen + 1] = '\0';
-                        refresh = true;
+                        refreshUI = true;
                         searchChanged = true;
                     }
                 }
