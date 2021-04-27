@@ -14,6 +14,7 @@
 #define MAX_LINES_PER_PAGE __max_lines__
 #define MAX_SEARCH_LENGTH 64
 #define MIN_SEARCH_BAR_LENGTH 20
+#define MAX_HITBOXES 64
 
 #define FOLDER_ICON "📁"
 #define FILE_ICON "📄"
@@ -56,6 +57,12 @@
 #define CTRL_BACKSPACE 8
 
 typedef struct dirent dirent;
+
+typedef struct
+{
+    int width;
+    int value;
+} box_t;
 
 void replaceStartingString(void *dest, char *src, char *pattern, char *override);
 void applyAliases(void *dest, char *src, char **patterns, char **overrides, size_t count);
@@ -211,6 +218,9 @@ options :\n\
     cbreak();
     noecho();
     nodelay(stdscr, TRUE);
+    scrollok(stdscr, TRUE);
+    mousemask(ALL_MOUSE_EVENTS, NULL);
+    mouseinterval(0);
     bool colors = has_colors();
     if (colors)
     {
@@ -254,6 +264,7 @@ options :\n\
     size_t foldersCount = 0;
     char **files = (char **)malloc(1024 * sizeof(char));
     char **filteredFiles = (char **)malloc(1024 * sizeof(char));
+    box_t hitboxes[MAX_HITBOXES];
     files[0] = NULL;
     size_t filesCount = 0;
     int selection;
@@ -379,10 +390,18 @@ options :\n\
                 for (int i = page * MAX_LINES_PER_PAGE; i < page * MAX_LINES_PER_PAGE + displayedCount; ++i)
                 {
                     move(2 + i - page * MAX_LINES_PER_PAGE, 0);
+                    box_t *hitbox = &hitboxes[i - page * MAX_LINES_PER_PAGE];
+                    hitbox->value = i;
                     if (i < filteredFoldersCount)
+                    {
                         displayFolder(filteredFolders[i], dir, useEmojis, patterns, overrides, patternCount, false, false);
+                        hitbox->width = (useEmojis ? 4 : 0) + strlen(filteredFolders[i]);
+                    }
                     else
+                    {
                         displayFile(filteredFiles[i - filteredFoldersCount], useEmojis, false, false);
+                        hitbox->width = (useEmojis ? 4 : 0) + strlen(filteredFiles[i - filteredFoldersCount]);
+                    }
                     clrtoeol();
                 }
             for (int i = displayedCount; i < MAX_LINES_PER_PAGE; ++i)
@@ -390,6 +409,8 @@ options :\n\
                 move(2 + i, 0);
                 clrtoeol();
             }
+            for (int i = displayedCount; i < MAX_HITBOXES; ++i)
+                hitboxes[i].value = -1;
             move(2 + MAX_LINES_PER_PAGE, 1);
             attron(COLOR_PAIR(DIRECTORY_BACK_COLOR));
             printw("Space");
@@ -455,6 +476,7 @@ options :\n\
         refreshUI = false;
         cursorMoved = true;
         int oldSelection = selection;
+        int mouseClickedSelection = -1;
         while (!refreshUI)
         {
             if (cursorMoved)
@@ -599,6 +621,74 @@ options :\n\
             }
             else if (key == ERR)
                 msleep(20);
+            else if (key == KEY_MOUSE)
+            {
+                MEVENT event;
+                if (getmouse(&event) == OK)
+                {
+                    if (event.bstate & BUTTON1_PRESSED)
+                    {
+                        if (event.y > 1 && event.y - 2 < MAX_HITBOXES && hitboxes[event.y - 2].value != -1 && hitboxes[event.y - 2].width >= event.x)
+                        {
+                            if (mouseClickedSelection == hitboxes[event.y - 2].value && selection < filteredFoldersCount)
+                            {
+                                char __fullDir[256];
+                                strcpy(__fullDir, dir);
+                                file_combine(__fullDir, filteredFolders[selection]);
+                                if (!access(__fullDir, R_OK))
+                                {
+                                    fullRefresh = true;
+                                    refreshUI = true;
+                                    sprintf(base_buffer, "%s/", filteredFolders[selection]);
+                                    file_combine(dir, base_buffer);
+                                }
+                            }
+                            selection = hitboxes[event.y - 2].value;
+                            mouseClickedSelection = selection;
+                            cursorMoved = true;
+                        }
+                    }
+                    else if (event.bstate & BUTTON3_PRESSED)
+                    {
+                        char __fullDir[256];
+                        strcpy(__fullDir, dir);
+                        file_combine(__fullDir, "..");
+                        if (!strcmp(folders[0], ".."))
+                        {
+                            selection = 0;
+                            fullRefresh = true;
+                            refreshUI = true;
+                            if (!strcmp(folders[0], ".."))
+                            {
+                                strcpy(base_buffer, dir);
+                                base_buffer[strlen(base_buffer) - 1] = '\0';
+                            }
+                            sprintf(base_buffer, "%s/", filteredFolders[selection]);
+                            file_combine(dir, base_buffer);
+                        }
+                    }
+                    else if (event.bstate & BUTTON4_PRESSED) //mouse wheel up
+                    {
+                        if (page > 0)
+                        {
+                            selection -= MAX_LINES_PER_PAGE;
+                            refreshUI = true;
+                        }
+                        cursorMoved = true;
+                    }
+                    else if (event.bstate & BUTTON5_PRESSED) //mouse wheel down
+                    {
+                        if (page < pagesCount - 1)
+                        {
+                            selection += MAX_LINES_PER_PAGE;
+                            if (selection > filteredFoldersCount + filteredFilesCount - 1)
+                                selection = filteredFoldersCount + filteredFilesCount - 1;
+                            refreshUI = true;
+                        }
+                        cursorMoved = true;
+                    }
+                }
+            }
             else
             {
                 if (konamiCounter == 8 && key == 'b')
