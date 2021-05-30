@@ -59,3 +59,7 @@ git clone https://github.com/WildGoat07/expdir
 cd expdir
 make deb
 ```
+
+### Special mentions
+
+Special thanks to [BaptisteMiq](https://github.com/BaptisteMiq) for testing and finding bugs.
