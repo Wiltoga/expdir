@@ -153,6 +153,7 @@ int main(int argc, char **argv)
     bool displayFiles = false;
     bool useEmojis = false;
     bool showHelp = false;
+    bool invoked = false;
 
     // args parsing
     for (int i = 1; i < argc; ++i)
@@ -184,6 +185,8 @@ int main(int argc, char **argv)
             useEmojis = true;
         else if (!strcmp(argv[i], "--help"))
             showHelp = true;
+        else if (!strcmp(argv[i], "invoke"))
+            invoked = true;
         else
         { // no special arg, the starting directory
             if (*argv[i] != '/')
@@ -199,10 +202,11 @@ int main(int argc, char **argv)
                 }
             }
         }
-        if (showHelp)
-        {
-            printf(
-                "Usage :\n\
+    }
+    if (showHelp)
+    {
+        printf(
+            "Usage :\n\
     expdir [<options>]\n\
 options :\n\
     -h, --help          displays this help panel\n\
@@ -210,8 +214,12 @@ options :\n\
     -f, --files         displays files\n\
     -v, --visuals       displays more visual stuff\n\
     <path>              start the browser in this directory\n");
-            return 0;
-        }
+        return 0;
+    }
+    if (!invoked)
+    {
+        printf("ERROR:Please use 'expdir', not 'expdirapp'.\n");
+        return -5;
     }
     // ncurses initialization
     setlocale(LC_ALL, "");

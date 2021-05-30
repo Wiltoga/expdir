@@ -7,7 +7,7 @@ BIN := $(workspace)/bin
 SRC := $(workspace)/src
 
 PACKAGE := $(workspace)/expdir
-VERSION := 1.1.3
+VERSION := 1.1.4
 
 SRC_EXPDIR := $(SRC)
 
