@@ -52,7 +52,7 @@ endif
 ifeq ("$(wildcard $(PACKAGE)/etc/expdir)", "")
 	mkdir -p $(PACKAGE)/etc/expdir
 endif
-	cp $(workspace)/alias $(PACKAGE)/etc/expdir
+	cp $(workspace)/aliases $(PACKAGE)/etc/expdir
 
 ifeq ("$(wildcard $(PACKAGE)/usr/local/bin)", "")
 	mkdir -p $(PACKAGE)/usr/local/bin
