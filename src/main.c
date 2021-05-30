@@ -218,7 +218,7 @@ options :\n\
     }
     if (!invoked)
     {
-        printf("ERROR:Please use 'expdir', not 'expdirapp'.\n");
+        printf("ERROR:Please use 'expdir', not 'expdirapp' or 'expdirscript.sh'.\n");
         return -5;
     }
     // ncurses initialization
