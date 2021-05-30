@@ -1,0 +1,2 @@
+#!/bin/bash
+echo "alias expdir=\". expdirscript.sh\"" >> /etc/bash.bashrc

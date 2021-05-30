@@ -44,8 +44,16 @@ deb: all
 ifeq ("$(wildcard $(PACKAGE)/DEBIAN)", "")
 	mkdir -p $(PACKAGE)/DEBIAN
 endif
+	cp $(workspace)/postinst $(PACKAGE)/DEBIAN
+	cp $(workspace)/postrm $(PACKAGE)/DEBIAN
 	cp $(workspace)/control $(PACKAGE)/DEBIAN
 	echo "Version: $(VERSION)" >> $(PACKAGE)/DEBIAN/control
+
+ifeq ("$(wildcard $(PACKAGE)/etc/expdir)", "")
+	mkdir -p $(PACKAGE)/etc/expdir
+endif
+	cp $(workspace)/alias $(PACKAGE)/etc/expdir
+
 ifeq ("$(wildcard $(PACKAGE)/usr/local/bin)", "")
 	mkdir -p $(PACKAGE)/usr/local/bin
 endif
@@ -56,9 +64,13 @@ ifeq ("$(wildcard $(DEB_DIR))", "")
 	mkdir -p $(DEB_DIR)
 endif
 	cp $(EXPDIR_OUTPUT) $(PACKAGE)/usr/local/bin
+	cp $(workspace)/expdirscript.sh $(PACKAGE)/usr/local/bin
+
+	chmod -R 755 $(PACKAGE)
 	dpkg-deb -b $(PACKAGE)
 	mv expdir.deb $(DEB_OUTPUT)
-
+	
+	rm -r $(PACKAGE)
 bin:
 ifeq ("$(wildcard $(BIN_EXPDIR))", "")
 	mkdir -p $(BIN_EXPDIR)

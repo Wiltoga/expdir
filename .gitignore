@@ -354,5 +354,4 @@ MigrationBackup/
 
 # list of generated packages
 package/
-*.deb
-expdir/DEBIAN/
+expdir/
