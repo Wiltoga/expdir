@@ -22,7 +22,7 @@ It also reacts to mouse clicks for the heretics out there.
 
 Simply call `expdir` to start the explorer. You can still call `expdir --help` for a list of all the options available.
 
-Commands :
+Controls :
 - `Space` : Validate the directory go change the current working directory.
 - `Ctrl+X` : Stop the application, do not move to directory.
 - `F5` : Refresh the directory.
